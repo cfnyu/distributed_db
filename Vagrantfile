@@ -32,12 +32,13 @@ Vagrant.configure(2) do |config|
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
-    apt-get install -y git python-pip python-dev build-essential
+    apt-get install -y git python-pip python-dev build-essential sqlite3 libsqlite3-dev
     pip install --upgrade pip
     apt-get -y autoremove
     # Install app dependencies
     cd /vagrant
     pip install -r requirements.txt
+    pip install reprozip
     # Make vi look nice
     sudo -H -u ubuntu echo "colorscheme desert" > ~/.vimrc
   SHELL
