@@ -12,7 +12,8 @@ Example:
 
 """
 import sys
-from logger import init_logger, log
+from arg_parser import validate_args
+from logger import log
 
 class Parser:
     """ Parse the input file and store each line in instructions list """
@@ -59,18 +60,10 @@ class Parser:
 
 def main():
     """ This code is intended to test is class from the CLI """
-    if len(sys.argv) < 2 or sys.argv[1] == '-v':
-        print "To parse a file use the following command: parser.py <file_name> [-v]"
-        return
 
-    log("Starting parse function " + str(sys.argv))
-
-    if len(sys.argv) > 2 and sys.argv[2] == '-v':
-        print "Verbose set to true"
-        init_logger(True)
-
-    parser = Parser()
-    parser.parse_file(sys.argv[1])
+    if validate_args():
+        parser = Parser()
+        parser.parse_file(sys.argv[1])
 
 if __name__ == "__main__":
     main()
