@@ -59,11 +59,15 @@ class Parser:
         return any(val in value for val in operations)
 
 def main():
-    """ This code is intended to test is class from the CLI """
+    """ This code is intended to test the Parser class from the CLI """
 
-    if validate_args():
+    err = "To parse a file use the following command: python parser.py <file_name> [-v]"
+
+    if validate_args(1, err):
         parser = Parser()
         parser.parse_file(sys.argv[1])
+        parser.get_instruction()
+        parser.get_instruction()
 
 if __name__ == "__main__":
     main()
