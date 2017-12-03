@@ -23,7 +23,7 @@ class Clock:
 
     def tick(self):
         """ Increase the time by one """
-        
+
         self.time += 1
 
 def main():
