@@ -1,0 +1,1 @@
+{"virtualbox":{"/vagrant":{"owner":"ubuntu","mount_options":["dmode=755,fmode=644","uid=1000","gid=1000"],"guestpath":"/vagrant","hostpath":"/Users/christian/Dropbox/NYU/School/classes/advanced database/project/distributed_db","disabled":false,"__vagrantfile":true}}}
