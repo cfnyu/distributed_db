@@ -37,7 +37,7 @@ Vagrant.configure(2) do |config|
     apt-get -y autoremove
     # Install app dependencies
     cd /vagrant
-    sudo pip install -r requirements.txt
+    pip install -r requirements.txt
     # Make vi look nice
     sudo -H -u ubuntu echo "colorscheme desert" > ~/.vimrc
   SHELL

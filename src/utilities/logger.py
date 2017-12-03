@@ -20,6 +20,8 @@ def log(value):
 
         else:
             print value
+    else:
+        return 0       
 
 def init_logger(value):
     """ Set the VERBOSE flag """

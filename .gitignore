@@ -131,3 +131,9 @@ boxes/*
 /vagrant-spec.config.rb
 
 *.log
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json

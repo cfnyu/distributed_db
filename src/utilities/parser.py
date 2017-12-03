@@ -11,9 +11,7 @@ Example:
     $ python parser.py <file_name> [-v]
 
 """
-import sys
-from arg_parser import validate_args
-from logger import log
+from src.utilities.logger import log
 
 class Parser:
     """ Parse the input file and store each line in instructions list """
@@ -57,17 +55,3 @@ class Parser:
         operations = ['begin', 'W', 'R', 'end', 'dump', 'beginRO', 'fail', 'recover']
 
         return any(val in value for val in operations)
-
-def main():
-    """ This code is intended to test the Parser class from the CLI """
-
-    err = "To parse a file use the following command: python parser.py <file_name> [-v]"
-
-    if validate_args(1, err):
-        parser = Parser()
-        parser.parse_file(sys.argv[1])
-        parser.get_instruction()
-        parser.get_instruction()
-
-if __name__ == "__main__":
-    main()
