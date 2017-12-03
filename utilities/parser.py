@@ -2,16 +2,14 @@
 """ File Parser
 
 This module parses a text file and extracts transaction data to be used for
-Simulating a transationtional database
+Simulating a transactional database
 
 Options:
     -v  using this flag will print the output to stdout
+
 Example:
     $ python parser.py <file_name> [-v]
 
-
-Todo:
-    * Implement parse function
 """
 import sys
 from logger import init_logger, log
