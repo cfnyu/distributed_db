@@ -5,8 +5,6 @@ This model represents the database clock.
 
 """
 
-#from utilities.logger import log
-
 class Clock:
     """ Maintain a numerical value that represents the 'System Time' """
 
