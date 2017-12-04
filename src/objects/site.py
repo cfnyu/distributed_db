@@ -4,14 +4,23 @@
 This module represents a site
 
 """
+from src.sites.data_manager import DataManager
+from src.objects.variable import Variable
 
 class Site:
     """ Represents a single Site """
 
-    def __init__(self, site_id, data_manager, lock_manager):
-        self.id = site_id
-        self.data_manager = data_manager
-        self.lock_manager = lock_manager
+    def __init__(self, site_id, logger):
+        self.identifer = site_id
+        self.data_manager = DataManager()
 
-    def __repr__(self):
-        return "<Site: %i>" % self.id
+        # Load all variables
+        for i in range(1, 21):
+            if i % 2 == 0 or 1 + i % 10 == site_id:
+                logger.log("Adding " + str(Variable(i)))
+                self.data_manager.add_variable(Variable(i))
+
+    def dump(self):
+        """ Dump the results of all commits values to stdout """
+
+        print self.data_manager.variables

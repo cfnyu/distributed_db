@@ -11,18 +11,15 @@ Example:
     $ python parser.py <file_name> [-v]
 
 """
-from src.utilities.logger import log
+from src.objects.instruction import Instruction
 
 class Parser:
     """ Parse the input file and store each line in instructions list """
 
-    def __init__(self):
+    def __init__(self, file_name, logger):
         """ Parser Constructor """
         self.instructions = []
-
-    def parse_file(self, file_name):
-        """ Parse the input file and store each line in instructions list """
-
+        self.logger = logger
         instruction_file = open(file_name, 'r')
         lines = instruction_file.readlines()
         instruction_file.close()
@@ -31,23 +28,25 @@ class Parser:
         for i, line in enumerate(lines):
             line_stripped = line.strip()
 
-            log("Line " + str(i+1) + ": " + line_stripped)
+            logger.log("Line " + str(i+1) + ": " + line_stripped)
 
             if self.is_valid_instruction(line_stripped):
-                instructions.append(line_stripped)
+                instruction = Instruction(line_stripped)
+                instructions.append(instruction)
 
-        log(instructions)
+        logger.log(instructions)
 
         self.instructions = list(reversed(instructions))
 
     def get_instruction(self):
         """ Get the next instruction to process """
 
-        instruction = self.instructions.pop()
+        if len(self.instructions) > 0:
+            instruction = self.instructions.pop()
 
-        log("Poping: " + str(instruction))
+            self.logger.log("Poping: " + str(instruction))
 
-        return instruction
+            return instruction
 
     def is_valid_instruction(self, value):
         """ Check value to see if it matches an approved instruction """

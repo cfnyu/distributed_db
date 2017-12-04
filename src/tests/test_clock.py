@@ -18,6 +18,7 @@ class ClockTestCase(unittest.TestCase):
         self.assertEquals(clock.time, 2)
 
     def test_show_clock_output(self):
+        """ Show the clock output is correct """
         clock = Clock()
 
         self.assertEquals(str(clock), "<Time: 0>")

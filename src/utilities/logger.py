@@ -2,29 +2,31 @@
 """ Logger
 
     This file holds all utility methods used for logging parts of the application
-    To assit with debugging
+    To assist with debugging
 """
 
-VERBOSE = False
+class Logger:
+    """ System logger """
 
-def log(value):
-    """Add a string that will be printed to the stdout if the VERBOSE flag is true"""
-    global VERBOSE
+    def __init__(self):
+        self.verbose = False
 
-    if VERBOSE:
-        if isinstance(value, list):
-            print "######### List Results #########"
+    def log(self, value):
+        """Add a string that will be printed to the stdout if the VERBOSE flag is true"""
 
-            for i, val in enumerate(value):
-                print str(i+1) + ":", str(val)
+        if self.verbose:
+            if isinstance(value, list):
+                print "######### List Results #########"
 
+                for i, val in enumerate(value):
+                    print str(i+1) + ":", str(val)
+
+            else:
+                print value
         else:
-            print value
-    else:
-        return 0       
+            return 0
 
-def init_logger(value):
-    """ Set the VERBOSE flag """
-    global VERBOSE
+    def show_stdout(self):
+        """ Set the Verbose flag to True"""
 
-    VERBOSE = value
+        self.verbose = True

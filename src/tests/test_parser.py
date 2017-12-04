@@ -4,6 +4,7 @@ import unittest
 import os
 
 from src.utilities.parser import Parser
+from src.utilities.logger import Logger
 
 class ParserTestCase(unittest.TestCase):
     """ Test cases for Parser """
@@ -23,10 +24,16 @@ class ParserTestCase(unittest.TestCase):
         """ Clean up environment when finished """
         os.remove('input_test.txt')
 
+    def setUp(self):
+        self.logger = Logger()
+        self.logger.show_stdout()
+
     def test_valid_input_file(self):
         """ Test that a valid input file can be read """
-        parser = Parser()
-        parser.parse_file('input_test.txt')
+        parser = Parser('input_test.txt', self.logger)
 
-        self.assertEquals(parser.get_instruction(), "begin(T1)")
-        self.assertEquals(parser.get_instruction(), "W(T1,x1,101)")
+        instruction1 = parser.get_instruction()
+        self.assertEquals(instruction1.instruction, "begin(T1)")
+
+        instruction2 = parser.get_instruction()
+        self.assertEquals(instruction2.instruction, "W(T1,x1,101)")

@@ -39,6 +39,8 @@ Vagrant.configure(2) do |config|
     cd /vagrant
     pip install -r requirements.txt
     pip install reprozip
+    pip install enum34
+
     # Make vi look nice
     sudo -H -u ubuntu echo "colorscheme desert" > ~/.vimrc
   SHELL
