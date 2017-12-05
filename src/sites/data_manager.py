@@ -14,6 +14,7 @@ class DataManager:
         self.entries = {}
         self.lock_manager = LockManager()
         self.variables = {}
+        self.up_time = 0
 
     def log(self, variable, time):
         """ Log all variable changes. """
@@ -51,15 +52,3 @@ class DataManager:
 
         if variable in self.entries:
             return self.entries[variable][time]
-
-    def dump(self):
-        """ Dump method """
-        return "Not Implemented"
-
-    def fail(self):
-        """ Fail method """
-        return "Not Implemented"
-
-    def recover(self):
-        """ Recover Method """
-        return "Not Implemented"

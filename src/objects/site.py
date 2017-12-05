@@ -6,6 +6,12 @@ This module represents a site
 """
 from src.sites.data_manager import DataManager
 from src.objects.variable import Variable
+from enum import Enum
+
+class SiteStatus(Enum):
+    """ Represents the possible status of a Site """
+    UP = 1
+    DOWN = 2
 
 class Site:
     """ Represents a single Site """
@@ -13,6 +19,7 @@ class Site:
     def __init__(self, site_id, logger):
         self.identifer = site_id
         self.data_manager = DataManager()
+        self.status = SiteStatus.UP
 
         # Load all variables
         for i in range(1, 21):

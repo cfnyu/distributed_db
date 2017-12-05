@@ -13,43 +13,35 @@ class TransactionManager:
 
     def __init__(self, logger):
         self.logger = logger
+        self.queue = []
 
     def execute(self, instruction):
-
-        while instruction:
-            if instruction.type == InstructionType.TRANSACTIONAL:
-                # Case statement to process instruction
-                pass
-            else:
-                # Call site execute method
-                pass
-
-        return "Process instruction"
+        print "Executing transactional function"
 
     def begin_transaction(self):
         """ Begin a Transaction """
-        pass
+        print "Begin Transaction"
 
     def end_transaction(self):
         """ End a Transaction """
-        pass
+        print "End a Transaction"
 
     def get(self):
         """ Get a Transaction """
-        pass
+        print Get a Transaction
 
     def commit(self):
         """ Commit a Transaction """
-        pass
+        print "Commit a Transaction"
 
     def abort(self):
         """ Abort a Transaction """
-        pass
+        print "Abort a Transaction"
 
     def read(self):
         """ Read the value of a Variable """
-        pass
+        print Read the value of a Variable
 
     def write(self):
         """ Write the value of a Variable """
-        pass
+        print "Write the value of a Variable"
