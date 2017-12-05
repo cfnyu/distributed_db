@@ -13,6 +13,7 @@ class DataManager:
         self.entries = {}
         self.variables = {}
         self.up_time = 0
+        self.locks = {}
 
     def log(self, variable, time):
         """ Log all variable changes. """
@@ -53,3 +54,36 @@ class DataManager:
                 return self.get_variable_at_time(variable, time-1)
             else:
                 return self.entries[variable][time].value
+
+    def get_variable_object(self, variable_ident):
+        """ Returns the variable object for the variable_ident """
+        return variables[variable.variable_ident]
+
+    def obtainWriteLock(self, instruction, transaction):
+        lock_type = LockType.WRITE
+
+        variable_ident = instruction.variable_identifier
+        variable = get_variable_object(variable_ident)
+
+        if variable_ident not in locks: 
+            lock = Lock(lock_type, transaction, variable)
+            locks[variable_ident] = [lock]
+            return true
+        else:
+            lock_list = locks[variable_ident]
+            for lock in lock_list:
+                if lock.transaction.identifier != transaction.identifier:
+                    return false
+
+            for lock in lock_list:
+                if lock.transaction.identifier == transaction.identifier:
+                    new_lock = lock
+                    new_lock.lock_type = LockType.WRITE
+                    lock_list[lock.index()] = new_lock
+                    break
+            
+            locks[variable_ident] = lock_list
+            return true
+
+
+        
