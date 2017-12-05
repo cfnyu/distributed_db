@@ -6,7 +6,7 @@ Transactions across all sites
 
 """
 from src.objects.clock import Clock
-from src.objects.site import Site
+from src.objects.site import Site, SiteStatus
 from src.objects.instruction import InstructionType
 from src.objects.transaction import Transaction, TransactionType
 
@@ -81,10 +81,11 @@ class TransactionManager:
             transaction = Transaction(trans_ident, TransactionType.READ_ONLY, self.clock.time)
 
             for site_identifier, site in self.sites.iteritems():
-                for variable in site.data_manager.variables:
-                    if site_identifier not in self.readonly_snapshots[trans_ident]:
-                        self.readonly_snapshots[trans_ident][site_identifier] = []
-                    self.readonly_snapshots[trans_ident][site_identifier].append(variable)
+                if site.status == SiteStatus.UP:
+                    for variable in site.data_manager.variables:
+                        if site_identifier not in self.readonly_snapshots[trans_ident]:
+                            self.readonly_snapshots[trans_ident][site_identifier] = []
+                        self.readonly_snapshots[trans_ident][site_identifier].append(variable)
 
         self.transactions[trans_ident] = transaction
 
