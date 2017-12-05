@@ -37,74 +37,72 @@ class TransactionManager:
         The appropriate method below or a site method
 
         """
-        
+
         if instruction.instruction_type == InstructionType.BEGIN:
-            self.begin_transaction(instruction)
+            return self.begin_transaction(instruction)
         elif instruction.instruction_type == InstructionType.BEGIN_RO:
-            self.begin_transaction(instruction)
+            return self.begin_transaction(instruction)
         elif instruction.instruction_type == InstructionType.DUMP_ALL:
-            self.dump(instruction)
+            return self.dump(instruction)
         elif instruction.instruction_type == InstructionType.DUMP_SITE:
-            self.dump(instruction)
+            return self.dump(instruction)
         elif instruction.instruction_type == InstructionType.DUMP_VAR:
-            self.dump(instruction)
+            return self.dump(instruction)
         elif instruction.instruction_type == InstructionType.END:
-            self.can_commit(instruction)
+            return self.can_commit(instruction)
         elif instruction.instruction_type == InstructionType.FAIL:
-            self.fail(instruction)
+            return self.fail(instruction)
         elif instruction.instruction_type == InstructionType.READ:
-            self.read(instruction)
+            return self.read(instruction)
         elif instruction.instruction_type == InstructionType.RECOVER:
-            self.recover(instruction)
+            return self.recover(instruction)
         elif instruction.instruction_type == InstructionType.WRITE:
-            self.write(instruction)
+            return self.write(instruction)
         else:
             # Throw an exception
             pass
 
-        print "Executing transactional function"
-
     def begin_transaction(self, instruction):
         """ Begin a Transaction """
         # Check Instruction type for either Readonly Transaction
-        print "Begin Transaction"
+        return "Begin Transaction"
 
     def end_transaction(self, instruction):
         """ End a Transaction """
-        print "End a Transaction"
+        return "End a Transaction"
 
     def get(self, instruction):
         """ Get a Transaction """
-        print "Get a Transaction"
+        return "Get a Transaction"
 
     def can_commit(self, instruction):
         """ Check if a transaction can be committed """
-        print "Check if a transaction can be committed"
+        return "Check if a transaction can be committed"
 
     def commit(self, instruction):
         """ Commit a Transaction """
-        print "Commit a Transaction"
+        return "Commit a Transaction"
 
     def abort(self, instruction):
         """ Abort a Transaction """
-        print "Abort a Transaction"
+        return "Abort a Transaction"
 
     def read(self, instruction):
         """ Read the value of a Variable """
-        print "Read the value of a Variable"
+        return "Read the value of a Variable"
 
     def write(self, instruction):
         """ Write the value of a Variable """
-        print "Write the value of a Variable"
+        return "Write the value of a Variable"
 
     def dump(self, instruction):
         # If args = #
         # Loop through all sites and call the dump method of individual site
         # Or call 
-        pass
+        return "dump"
 
     def fail(self, instruction):
-        pass
+        return "fail"
 
     def recover(self, instruction):
-        pass
+        return "recover"
