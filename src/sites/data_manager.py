@@ -56,11 +56,7 @@ class DataManager:
                 return self.get_variable_at_time(variable, time-1)
             else:
                 return self.entries[variable][time].value
-
-    def get_variable_object(self, variable_ident):
-        """ Returns the variable object for the variable_ident """
-        return self.variables[variable_ident]
-
+                
     def obtain_write_lock(self, instruction, transaction):
         """ Obtain the Write Lock for a Transaction """
 
@@ -68,7 +64,7 @@ class DataManager:
 
         #get the variable from the variable identifier
         variable_ident = instruction.variable_identifier
-        variable = self.get_variable_object(variable_ident)
+        variable = self.variables[variable_ident]
 
         #Check if there are locks already for that variable
         if variable_ident not in self.locks: 
