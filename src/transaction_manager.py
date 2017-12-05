@@ -82,7 +82,9 @@ class TransactionManager:
 
             for site_identifier, site in self.sites.iteritems():
                 for variable in site.data_manager.variables:
-                    self.readonly_snapshots[trans_ident][site_identifier] = variable
+                    if site_identifier not in self.readonly_snapshots[trans_ident]:
+                        self.readonly_snapshots[trans_ident][site_identifier] = []
+                    self.readonly_snapshots[trans_ident][site_identifier].append(variable)
 
         self.transactions[trans_ident] = transaction
 
