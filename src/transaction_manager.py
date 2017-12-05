@@ -5,23 +5,27 @@ This module represents the Transaction Manager, which manages
 Transactions across all sites
 
 """
+from src.objects.clock import Clock
 from src.objects.site import Site
 from src.objects.instruction import InstructionType
+from src.objects.transaction import Transaction, TransactionType
 
 class TransactionManager:
     """ Maintains all transactions for the database """
 
-    def __init__(self, time, logger):
+    def __init__(self, logger):
         self.logger = logger
-        self.queue = {}
+        self.transactions = {}
+        self.readonly_snapshots = {}
         self.sites = {}
         self.site_to_variables_map = {}
         self.variables_to_site_map = {}
+        self.clock = Clock()
 
         # Python range function does not include last value so while there
         # Will only be 10 sites, the range must go to 11 to include 10
         for i in range(1, 11):
-            site = Site(i, time, logger)
+            site = Site(i, self.clock.time, logger)
             self.sites[site.identifer] = site
             self.site_to_variables_map[i] = site.data_manager.variables
 
@@ -37,6 +41,7 @@ class TransactionManager:
         The appropriate method below or a site method
 
         """
+        self.clock.tick()
 
         if instruction.instruction_type == InstructionType.BEGIN:
             return self.begin_transaction(instruction)
@@ -64,8 +69,22 @@ class TransactionManager:
 
     def begin_transaction(self, instruction):
         """ Begin a Transaction """
-        # Check Instruction type for either Readonly Transaction
-        return "Begin Transaction"
+
+        trans_ident = instruction.transaction_identifier
+
+        if instruction.instruction_type == InstructionType.BEGIN:
+            transaction = Transaction(trans_ident, TransactionType.READ_WRITE, \
+                                      self.clock.time)
+        else:
+            # Take a snapshot of the data at the time of this transaction
+            self.readonly_snapshots[trans_ident] = {}
+            transaction = Transaction(trans_ident, TransactionType.READ_ONLY, self.clock.time)
+
+            for site_identifier, site in self.sites.iteritems():
+                for variable in site.data_manager.variables:
+                    self.readonly_snapshots[trans_ident][site_identifier] = variable
+
+        self.transactions[trans_ident] = transaction
 
     def end_transaction(self, instruction):
         """ End a Transaction """

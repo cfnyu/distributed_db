@@ -8,7 +8,6 @@ import sys
 from src.transaction_manager import TransactionManager
 from src.utilities.logger import Logger
 from src.utilities.parser import Parser
-from src.objects.clock import Clock
 
 LOGGER = Logger()
 SITES = []
@@ -17,16 +16,13 @@ def main():
     """ Main entry point for the application """
 
     if validate_args():
-        clock = Clock()
         # Confirm time with professor
-        transaction_manager = TransactionManager(clock.time, LOGGER)
+        transaction_manager = TransactionManager(LOGGER)
         parser = Parser(sys.argv[1], LOGGER)
 
-        clock.tick()
         instruction = parser.get_instruction()
         while instruction:
             transaction_manager.execute(instruction)
-            clock.tick()
             instruction = parser.get_instruction()
 
 def validate_args():

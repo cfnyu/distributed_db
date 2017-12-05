@@ -23,7 +23,7 @@ class Transaction:
     """ Represents a single transaction object """
 
     def __init__(self, identifier, transaction_type, start_time):
-        self.index = identifier # Extract number from identifier
+        self.index = int(identifier.upper().replace("T", ""))
         self.identifier = identifier
         self.transaction_type = transaction_type
         self.start_time = start_time

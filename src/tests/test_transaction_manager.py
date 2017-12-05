@@ -4,8 +4,8 @@ import unittest
 import sys
 from contextlib import contextmanager
 from StringIO import StringIO
-from src.objects.clock import Clock
 from src.utilities.logger import Logger
+from src.objects.transaction import TransactionType, TransactionState
 from src.transaction_manager import TransactionManager
 from src.objects.instruction import Instruction
 
@@ -15,27 +15,36 @@ class TransactionManagerTestCase(unittest.TestCase):
     def setUp(self):
         self.logger = Logger()
         # self.logger.show_stdout()
-        self.clock = Clock()
-        self.clock.tick()
-        self.transaction_manager = TransactionManager(self.clock.time, self.logger)
+        self.transaction_manager = TransactionManager(self.logger)
 
-    def test_execute_begin_transaction(self):
-        """ Given a Begin instruction, begin transaction method will be called """
-        # TODO: Re-write function once begin_transaction function has been written
+    def test_execute_begin_transaction_read_write(self):
+        """ Testing a Read/Write Begin transaction statement """
 
         instruction = Instruction("Begin(T1)")
-        result = self.transaction_manager.execute(instruction)
-
-        self.assertEquals(result, "Begin Transaction")
+        self.transaction_manager.execute(instruction)
+        trans1 = self.transaction_manager.transactions["T1"]
+        self.assertEquals(len(self.transaction_manager.transactions), 1)
+        self.assertEquals(trans1.identifier, "T1")
+        self.assertEquals(trans1.transaction_type, TransactionType.READ_WRITE)
+        self.assertEquals(trans1.start_time, 1)
+        self.assertIsNone(trans1.end_time)
+        self.assertEquals(trans1.state, TransactionState.WAITING)
 
     def test_execute_begin_ro_transaction(self):
-        """ Given a BeginRO instruction, begin transaction method will be called """
-        # TODO: Re-write function once begin_transaction function has been written
+        """ Testing a Read Only Begin transaction statement """
 
         instruction = Instruction("BeginRO(T1)")
-        result = self.transaction_manager.execute(instruction)
+        self.transaction_manager.execute(instruction)
+        trans1 = self.transaction_manager.transactions["T1"]
 
-        self.assertEquals(result, "Begin Transaction")
+        self.assertEquals(len(self.transaction_manager.transactions), 1)
+        self.assertTrue(instruction.transaction_identifier in self.transaction_manager.readonly_snapshots)
+        self.assertEquals(len(self.transaction_manager.readonly_snapshots["T1"].keys()), 10)
+        self.assertEquals(trans1.identifier, "T1")
+        self.assertEquals(trans1.transaction_type, TransactionType.READ_ONLY)
+        self.assertEquals(trans1.start_time, 1)
+        self.assertIsNone(trans1.end_time)
+        self.assertEquals(trans1.state, TransactionState.WAITING)
 
     def test_execute_dump_all_transaction(self):
         """ Given a Dump All instruction, dump method will be called """
