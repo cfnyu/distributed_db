@@ -6,7 +6,7 @@ Transactions across all sites
 
 """
 from src.objects.clock import Clock
-from src.objects.site import Site
+from src.objects.site import Site, SiteStatus
 from src.objects.instruction import InstructionType
 from src.objects.transaction import Transaction, TransactionType, TransactionState
 
@@ -128,13 +128,13 @@ class TransactionManager:
                 return 
             else:
                 stable_sites = []
-                sites_with_variable = self.variables_to_site_map[variable.identifier]
+                sites_with_variable = self.variables_to_site_map[instruction.variable_identifier]
 
                 for site in sites_with_variable:
                     if site.status == SiteStatus.UP:
                         stable_sites.append(site)
                 
-                if stable_sites.count() == 0:  #No available site
+                if len(stable_sites) == 0:  #No available site
                     transaction.state = TransactionState.WAITING
                     self.transactions[transaction_ident] = transaction
                     self.waiting_or_blocked_transactions_map[transaction_ident] = instruction
