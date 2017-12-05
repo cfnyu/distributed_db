@@ -4,9 +4,9 @@
 This module represents a site
 
 """
+from enum import Enum
 from src.sites.data_manager import DataManager
 from src.objects.variable import Variable
-from enum import Enum
 
 class SiteStatus(Enum):
     """ Represents the possible status of a Site """
@@ -30,7 +30,7 @@ class Site:
     def dump(self):
         """ Dump the results of all commits values to stdout """
 
-        print self.data_manager.variables
+        return self.data_manager.variables
 
     def recover(self):
         """ Recover this site """

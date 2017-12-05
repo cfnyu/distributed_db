@@ -14,7 +14,7 @@ class TransactionManager:
     def __init__(self, time, logger):
         self.logger = logger
         self.queue = {}
-        self.sites = []
+        self.sites = {}
         self.site_to_variables_map = {}
         self.variables_to_site_map = {}
 
@@ -22,7 +22,7 @@ class TransactionManager:
         # Will only be 10 sites, the range must go to 11 to include 10
         for i in range(1, 11):
             site = Site(i, time, logger)
-            self.sites.append(site)
+            self.sites[site.identifer] = site
             self.site_to_variables_map[i] = site.data_manager.variables
 
             for variable in site.data_manager.variables:
@@ -96,10 +96,21 @@ class TransactionManager:
         return "Write the value of a Variable"
 
     def dump(self, instruction):
-        # If args = #
-        # Loop through all sites and call the dump method of individual site
-        # Or call 
-        return "dump"
+        results = {}
+        if instruction.site_identifier:
+            results = self.sites[instruction.site_identifier].dump()
+        elif instruction.variable_identifier:
+            for ident, site in self.sites.iteritems():
+                variable = instruction.variable_identifier
+                if variable in site.data_manager.variables:
+                    if ident not in results:
+                        results[ident] = str(site.data_manager.variables[variable])
+        else:
+            results = {}
+            for ident, site in self.sites.iteritems():
+                results[ident] = site.dump()
+
+        print results
 
     def fail(self, instruction):
         return "fail"

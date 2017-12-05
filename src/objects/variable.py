@@ -17,5 +17,4 @@ class Variable:
         self.last_committed_value = self.value
 
     def __repr__(self):
-        return "{ Index: %i, Id: %s, Replicated: %s, Readable: %s, Value: %i }\n" % \
-                (self.index, self.identifier, str(self.replicated), str(self.readable), self.value)
+        return "{ %s: %s }" % (self.identifier, self.value)
