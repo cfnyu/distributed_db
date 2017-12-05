@@ -5,6 +5,8 @@ import os
 
 from src.utilities.parser import Parser
 from src.utilities.logger import Logger
+from src.objects.clock import Clock
+from src.objects.instruction import Instruction, InstructionType
 
 class ParserTestCase(unittest.TestCase):
     """ Test cases for Parser """
@@ -32,8 +34,13 @@ class ParserTestCase(unittest.TestCase):
         """ Test that a valid input file can be read """
         parser = Parser('input_test.txt', self.logger)
 
-        instruction1 = parser.get_instruction()
-        self.assertEquals(instruction1.instruction, "begin(T1)")
+        instruction = parser.get_instruction()
+        self.assertEquals(instruction.instruction_type, InstructionType.BEGIN)
+        self.assertEquals(instruction.transaction_identifier, "T1")
 
-        instruction2 = parser.get_instruction()
-        self.assertEquals(instruction2.instruction, "W(T1,x1,101)")
+        instruction = parser.get_instruction()
+        print instruction
+        self.assertEquals(instruction.instruction_type, InstructionType.WRITE)
+        self.assertEquals(instruction.transaction_identifier, "T1")
+        self.assertEquals(instruction.variable_identifier, "x1")
+        self.assertEquals(instruction.value, "101")

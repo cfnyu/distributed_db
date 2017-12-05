@@ -4,7 +4,12 @@
 This module represents a single instruction
 
 """
+import re
 from enum import Enum
+
+TRANSACTION_EXPR = "\s*(t[1-9]|t10)\s*"
+VARIABLE_EXPR = "\s*(x[1-9]{1}|x1[1-9]{1}|x10|x20)\s*"
+SITE_EXPR = "\s*([1-9]|10)\s*"
 
 class InstructionType(Enum):
     """ Represents the Instruction Type """
@@ -12,24 +17,78 @@ class InstructionType(Enum):
     BEGIN_RO = 2,
     READ = 3,
     WRITE = 4,
-    DUMP = 5,
-    END = 6,
-    FAIL = 7,
-    RECOVER = 8
+    DUMP_ALL = 5,
+    DUMP_VAR = 6,
+    DUMP_SITE = 7,
+    END = 8,
+    FAIL = 9,
+    RECOVER = 10
 
 class Instruction:
     """ This class represents an instruction """
 
-    def __init__(self, time, instruction_str):
+    def __init__(self, instruction_str):
         # TODO: Parse the instruction
-        self.variable_type = InstructionType.SITE
+        self.instruction_type = self.get_type(instruction_str)
         self.variable_identifier = None
-        self.site = None
-        self.transaction = None
+        self.site_identifier = None
+        self.transaction_identifier = None
+        self.value = None
 
-        if any(val in instruction_str for val in ['Dump', 'Fail', 'Recover']):
-            self.site = 1 # Site to access
-        else:
-            self.transaction = "Create transaction" # Transaction(time)
-            if self.variable_type == InstructionType.READ or self.variable_type == InstructionType.WRITE:
-                self.variable_identifier = "x1"
+        if (self.instruction_type == InstructionType.BEGIN or
+            self.instruction_type == InstructionType.BEGIN_RO or
+            self.instruction_type == InstructionType.END):
+            self.transaction_identifier = self.get_single_value(instruction_str)
+        elif (self.instruction_type == InstructionType.READ):
+            values = self.get_multiple_values(instruction_str)
+            self.transaction_identifier = values[0]
+            self.variable_identifier = values[1]
+        elif (self.instruction_type == InstructionType.WRITE):
+            values = self.get_multiple_values(instruction_str)
+            self.transaction_identifier = values[0]
+            self.variable_identifier = values[1]
+            self.value = values[2]
+        elif (self.instruction_type == InstructionType.FAIL or
+              self.instruction_type == InstructionType.RECOVER):
+            self.site_identifier = self.get_single_value(instruction_str)
+
+    def __repr__(self):
+        """ Representation of this object """
+
+        return "{ Type: %s, Variable: %s, Site: %s, Transaction: %s, Value: %s}" % \
+                (self.instruction_type, self.variable_identifier, str(self.site_identifier), \
+                 self.transaction_identifier, self.value)
+
+    def get_type(self, instruction_str):
+        """ Gets the type of instruction from the file """
+        
+        expressions = {
+            InstructionType.DUMP_ALL: "dump\(\)",
+            InstructionType.DUMP_SITE: "dump\(%s\)" % SITE_EXPR,
+            InstructionType.DUMP_VAR: "dump\(%s\)" % VARIABLE_EXPR,
+            InstructionType.BEGIN: "begin\(%s\)" % TRANSACTION_EXPR,
+            InstructionType.BEGIN_RO: "beginRO\(%s\)" % TRANSACTION_EXPR,
+            InstructionType.READ: "R\(%s,%s\)" % (TRANSACTION_EXPR, VARIABLE_EXPR),
+            InstructionType.WRITE: "W\(%s,%s,\s*[a-zA-Z0-9]\s*\)",
+            InstructionType.END: "end\(%s\)" % TRANSACTION_EXPR,
+            InstructionType.FAIL: "fail\(%s\)" % SITE_EXPR,
+            InstructionType.RECOVER: "recover\(%s\)" % SITE_EXPR
+        }
+
+        for instruction_type, expr in expressions.iteritems():
+            print "Checking", str(instruction_type), "With", str(expr)
+            pattern = re.compile(expr, re.IGNORECASE)
+            if pattern.match(instruction_str.lower()):
+                print "Found a match, returning type:", str(instruction_type)
+                return instruction_type
+
+    def get_single_value(self, instruction_str):
+        """ Returns the value in between parenthesis """
+
+        return instruction_str[instruction_str.find("(")+1:instruction_str.find(")")]
+
+    def get_multiple_values(self, instruction_str):
+        """ Returns all values in between parenthesis as an array """
+
+        values = instruction_str[instruction_str.find("(")+1:instruction_str.find(")")]
+        return values.split(",")

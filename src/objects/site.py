@@ -25,7 +25,7 @@ class Site:
         for i in range(1, 21):
             if i % 2 == 0 or 1 + (i % 10) == site_id:
                 logger.log("Adding " + str(Variable(i)))
-                self.data_manager.add_variable(Variable(i), time)
+                self.data_manager.add_variable(time, Variable(i))
 
     def dump(self):
         """ Dump the results of all commits values to stdout """

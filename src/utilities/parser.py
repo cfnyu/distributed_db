@@ -38,16 +38,17 @@ class Parser:
 
         self.instructions = list(reversed(instructions))
 
-    def get_instruction(self, time):
+    def get_instruction(self):
         """ Get the next instruction to process """
         no_of_instructions = len(self.instructions)
+        print "Instruction Count:", no_of_instructions
 
         if no_of_instructions > 0:
             instruction = self.instructions.pop()
 
             self.logger.log("Poping: " + str(instruction))
 
-            return Instruction(time, instruction)
+            return Instruction(instruction)
 
     def is_valid_instruction(self, value):
         """ Check value to see if it matches an approved instruction """

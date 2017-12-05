@@ -49,4 +49,7 @@ class DataManager:
         """ Returns the last known committed value for this variable """
 
         if variable in self.entries:
-            return self.entries[variable][time].value
+            if not time in self.entries[variable]:
+                return self.get_variable_at_time(variable, time-1)
+            else:
+                return self.entries[variable][time].value
