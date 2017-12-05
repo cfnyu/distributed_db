@@ -6,6 +6,8 @@ Site specific data
 
 """
 
+from src.objects.lock import Lock, LockType
+
 class DataManager:
     """ Maintains all data for a particular site """
 
@@ -57,33 +59,41 @@ class DataManager:
 
     def get_variable_object(self, variable_ident):
         """ Returns the variable object for the variable_ident """
-        return variables[variable.variable_ident]
+        return self.variables[variable_ident]
 
-    def obtainWriteLock(self, instruction, transaction):
+    def obtain_write_lock(self, instruction, transaction):
+        """ Obtain the Write Lock for a Transaction """
+
         lock_type = LockType.WRITE
 
+        #get the variable from the variable identifier
         variable_ident = instruction.variable_identifier
-        variable = get_variable_object(variable_ident)
+        variable = self.get_variable_object(variable_ident)
 
-        if variable_ident not in locks: 
+        #Check if there are locks already for that variable
+        if variable_ident not in self.locks: 
             lock = Lock(lock_type, transaction, variable)
-            locks[variable_ident] = [lock]
-            return true
+            self.locks[variable_ident] = [lock]
+            #TODO: log lock acquired 
+            return True
         else:
-            lock_list = locks[variable_ident]
+            lock_list = self.locks[variable_ident]
+            
+            #If any transaction has a lock on the variable, this transaction cannot obtain a lock
             for lock in lock_list:
                 if lock.transaction.identifier != transaction.identifier:
-                    return false
+                    #TODO: log lock was not acquired
+                    return False
 
-            for lock in lock_list:
-                if lock.transaction.identifier == transaction.identifier:
-                    new_lock = lock
-                    new_lock.lock_type = LockType.WRITE
-                    lock_list[lock.index()] = new_lock
-                    break
+            #If the same transition has a lock, we just update the lock type
+            #There would only be one lock for the variable in this case
             
-            locks[variable_ident] = lock_list
-            return true
+            if lock_list[0].transaction.identifier == transaction.identifier:
+                lock_list[0].lock_type = LockType.WRITE
+                    
+            self.locks[variable_ident] = lock_list
+            #TODO: log lock updated and acquired
+            return True
 
 
         
