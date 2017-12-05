@@ -15,15 +15,21 @@ class TransactionManager:
         self.logger = logger
         self.queue = {}
         self.sites = []
+        self.site_to_variables_map = {}
+        self.variables_to_site_map = {}
 
         # Python range function does not include last value so while there
         # Will only be 10 sites, the range must go to 11 to include 10
         for i in range(1, 11):
             site = Site(i, time, logger)
             self.sites.append(site)
+            self.site_to_variables_map[i] = site.data_manager.variables
 
-        self.site_to_variables_map = { 1: ["x1", "x3"] }
-        self.variables_to_site_map = { "x1": [1, 2] }
+            for variable in site.data_manager.variables:
+                if variable not in self.variables_to_site_map:
+                    self.variables_to_site_map[variable] = []
+
+                self.variables_to_site_map[variable].append(site.identifer)
 
     def execute(self, instruction):
         """

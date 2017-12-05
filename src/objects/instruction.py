@@ -28,29 +28,31 @@ class Instruction:
     """ This class represents an instruction """
 
     def __init__(self, instruction_str):
-        # TODO: Parse the instruction
         self.instruction_type = self.get_type(instruction_str)
         self.variable_identifier = None
         self.site_identifier = None
         self.transaction_identifier = None
         self.value = None
 
-        if (self.instruction_type == InstructionType.BEGIN or
-            self.instruction_type == InstructionType.BEGIN_RO or
-            self.instruction_type == InstructionType.END):
+        if self.instruction_type == InstructionType.BEGIN or \
+           self.instruction_type == InstructionType.BEGIN_RO or \
+           self.instruction_type == InstructionType.END:
             self.transaction_identifier = self.get_single_value(instruction_str)
-        elif (self.instruction_type == InstructionType.READ):
+        elif self.instruction_type == InstructionType.READ:
             values = self.get_multiple_values(instruction_str)
             self.transaction_identifier = values[0]
             self.variable_identifier = values[1]
-        elif (self.instruction_type == InstructionType.WRITE):
+        elif self.instruction_type == InstructionType.WRITE:
             values = self.get_multiple_values(instruction_str)
             self.transaction_identifier = values[0]
             self.variable_identifier = values[1]
             self.value = values[2]
-        elif (self.instruction_type == InstructionType.FAIL or
-              self.instruction_type == InstructionType.RECOVER):
-            self.site_identifier = self.get_single_value(instruction_str)
+        elif self.instruction_type == InstructionType.FAIL or \
+             self.instruction_type == InstructionType.RECOVER or \
+             self.instruction_type == InstructionType.DUMP_SITE:
+            self.site_identifier = int(self.get_single_value(instruction_str))
+        elif self.instruction_type == InstructionType.DUMP_VAR:
+            self.variable_identifier = self.get_single_value(instruction_str)
 
     def __repr__(self):
         """ Representation of this object """
