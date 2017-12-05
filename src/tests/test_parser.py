@@ -39,7 +39,6 @@ class ParserTestCase(unittest.TestCase):
         self.assertEquals(instruction.transaction_identifier, "T1")
 
         instruction = parser.get_instruction()
-        print instruction
         self.assertEquals(instruction.instruction_type, InstructionType.WRITE)
         self.assertEquals(instruction.transaction_identifier, "T1")
         self.assertEquals(instruction.variable_identifier, "x1")

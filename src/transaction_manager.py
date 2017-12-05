@@ -5,8 +5,8 @@ This module represents the Transaction Manager, which manages
 Transactions across all sites
 
 """
-from objects.site import Site
-from objects.instruction import InstructionType
+from src.objects.site import Site
+from src.objects.instruction import InstructionType
 
 class TransactionManager:
     """ Maintains all transactions for the database """
@@ -32,41 +32,73 @@ class TransactionManager:
 
         """
         
+        if instruction.instruction_type == InstructionType.BEGIN:
+            self.begin_transaction(instruction)
+        elif instruction.instruction_type == InstructionType.BEGIN_RO:
+            self.begin_transaction(instruction)
+        elif instruction.instruction_type == InstructionType.DUMP_ALL:
+            self.dump(instruction)
+        elif instruction.instruction_type == InstructionType.DUMP_SITE:
+            self.dump(instruction)
+        elif instruction.instruction_type == InstructionType.DUMP_VAR:
+            self.dump(instruction)
+        elif instruction.instruction_type == InstructionType.END:
+            self.can_commit(instruction)
+        elif instruction.instruction_type == InstructionType.FAIL:
+            self.fail(instruction)
+        elif instruction.instruction_type == InstructionType.READ:
+            self.read(instruction)
+        elif instruction.instruction_type == InstructionType.RECOVER:
+            self.recover(instruction)
+        elif instruction.instruction_type == InstructionType.WRITE:
+            self.write(instruction)
+        else:
+            # Throw an exception
+            pass
+
         print "Executing transactional function"
 
-    def begin_transaction(self):
+    def begin_transaction(self, instruction):
         """ Begin a Transaction """
+        # Check Instruction type for either Readonly Transaction
         print "Begin Transaction"
 
-    def end_transaction(self):
+    def end_transaction(self, instruction):
         """ End a Transaction """
         print "End a Transaction"
 
-    def get(self):
+    def get(self, instruction):
         """ Get a Transaction """
         print "Get a Transaction"
 
-    def can_commit(self):
+    def can_commit(self, instruction):
         """ Check if a transaction can be committed """
         print "Check if a transaction can be committed"
 
-    def commit(self):
+    def commit(self, instruction):
         """ Commit a Transaction """
         print "Commit a Transaction"
 
-    def abort(self):
+    def abort(self, instruction):
         """ Abort a Transaction """
         print "Abort a Transaction"
 
-    def read(self):
+    def read(self, instruction):
         """ Read the value of a Variable """
         print "Read the value of a Variable"
 
-    def write(self):
+    def write(self, instruction):
         """ Write the value of a Variable """
         print "Write the value of a Variable"
 
-    def dump(self, args=None):
+    def dump(self, instruction):
         # If args = #
         # Loop through all sites and call the dump method of individual site
         # Or call 
+        pass
+
+    def fail(self, instruction):
+        pass
+
+    def recover(self, instruction):
+        pass

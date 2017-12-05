@@ -15,15 +15,15 @@ class InstructionType(Enum):
     """ Represents the Instruction Type """
     BEGIN = 1,
     BEGIN_RO = 2,
-    READ = 3,
-    WRITE = 4,
-    DUMP_ALL = 5,
-    DUMP_VAR = 6,
-    DUMP_SITE = 7,
-    END = 8,
-    FAIL = 9,
-    RECOVER = 10
-
+    DUMP_ALL = 3,
+    DUMP_SITE = 4,
+    DUMP_VAR = 5,
+    END = 6,
+    FAIL = 7,
+    READ = 8,
+    RECOVER = 9,
+    WRITE = 10
+    
 class Instruction:
     """ This class represents an instruction """
 
@@ -63,23 +63,21 @@ class Instruction:
         """ Gets the type of instruction from the file """
         
         expressions = {
+            InstructionType.BEGIN: "begin\(%s\)" % TRANSACTION_EXPR,
+            InstructionType.BEGIN_RO: "beginro\(%s\)" % TRANSACTION_EXPR,
             InstructionType.DUMP_ALL: "dump\(\)",
             InstructionType.DUMP_SITE: "dump\(%s\)" % SITE_EXPR,
             InstructionType.DUMP_VAR: "dump\(%s\)" % VARIABLE_EXPR,
-            InstructionType.BEGIN: "begin\(%s\)" % TRANSACTION_EXPR,
-            InstructionType.BEGIN_RO: "beginRO\(%s\)" % TRANSACTION_EXPR,
-            InstructionType.READ: "R\(%s,%s\)" % (TRANSACTION_EXPR, VARIABLE_EXPR),
-            InstructionType.WRITE: "W\(%s,%s,\s*[a-zA-Z0-9]\s*\)",
             InstructionType.END: "end\(%s\)" % TRANSACTION_EXPR,
             InstructionType.FAIL: "fail\(%s\)" % SITE_EXPR,
-            InstructionType.RECOVER: "recover\(%s\)" % SITE_EXPR
+            InstructionType.READ: "r\(%s,%s\)" % (TRANSACTION_EXPR, VARIABLE_EXPR),
+            InstructionType.RECOVER: "recover\(%s\)" % SITE_EXPR,
+            InstructionType.WRITE: "w\(%s,%s,\s*[a-zA-Z0-9]+\s*\)" % (TRANSACTION_EXPR, VARIABLE_EXPR)
         }
 
         for instruction_type, expr in expressions.iteritems():
-            print "Checking", str(instruction_type), "With", str(expr)
             pattern = re.compile(expr, re.IGNORECASE)
             if pattern.match(instruction_str.lower()):
-                print "Found a match, returning type:", str(instruction_type)
                 return instruction_type
 
     def get_single_value(self, instruction_str):

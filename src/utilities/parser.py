@@ -41,7 +41,6 @@ class Parser:
     def get_instruction(self):
         """ Get the next instruction to process """
         no_of_instructions = len(self.instructions)
-        print "Instruction Count:", no_of_instructions
 
         if no_of_instructions > 0:
             instruction = self.instructions.pop()

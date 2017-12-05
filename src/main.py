@@ -23,11 +23,11 @@ def main():
         parser = Parser(sys.argv[1], LOGGER)
 
         clock.tick()
-        instruction = parser.get_instruction(clock.time)
+        instruction = parser.get_instruction()
         while instruction:
             transaction_manager.execute(instruction)
             clock.tick()
-            instruction = parser.get_instruction(clock.time)
+            instruction = parser.get_instruction()
 
 def validate_args():
     """ Validate if the user arguments are valid """
