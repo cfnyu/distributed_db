@@ -34,6 +34,14 @@ class DataManager:
         # Starting initial variable value
         self.log(variable, time)
 
+    def write_new_data(self, time, variable_ident, new_value):
+        """ Method to write the new value of the variable. This will go into the log """
+        #Get the variable object from the variable dictionary
+        variable = self.variables[variable_ident]
+        #update the new value of the variable
+        variable.value = new_value
+        self.log(variable, time)
+
     def get_variable_value(self, identifier):
         """ Returns the last known committed value for this variable """
 

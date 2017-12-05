@@ -8,7 +8,7 @@ Transactions across all sites
 from src.objects.clock import Clock
 from src.objects.site import Site
 from src.objects.instruction import InstructionType
-from src.objects.transaction import Transaction, TransactionType
+from src.objects.transaction import Transaction, TransactionType, TransactionState
 
 class TransactionManager:
     """ Maintains all transactions for the database """
@@ -21,6 +21,8 @@ class TransactionManager:
         self.site_to_variables_map = {}
         self.variables_to_site_map = {}
         self.clock = Clock()
+        self.waiting_or_blocked_transactions_map = {}
+        self.pending_instructions_queue = {}
 
         # Python range function does not include last value so while there
         # Will only be 10 sites, the range must go to 11 to include 10
@@ -31,9 +33,9 @@ class TransactionManager:
 
             for variable in site.data_manager.variables:
                 if variable not in self.variables_to_site_map:
-                    self.variables_to_site_map[variable] = []
+                    self.variables_to_site_map[variable.identifier] = []
 
-                self.variables_to_site_map[variable].append(site.identifer)
+                self.variables_to_site_map[variable.identifier].append(site.identifer)
 
     def execute(self, instruction):
         """
@@ -82,6 +84,7 @@ class TransactionManager:
 
             for site_identifier, site in self.sites.iteritems():
                 for variable in site.data_manager.variables:
+                    #Todo: make a list here
                     self.readonly_snapshots[trans_ident][site_identifier] = variable
 
         self.transactions[trans_ident] = transaction
@@ -112,7 +115,52 @@ class TransactionManager:
 
     def write(self, instruction):
         """ Write the value of a Variable """
-        return "Write the value of a Variable"
+
+        #get the transaction identifier from the instruction
+        transaction_ident = instruction.transaction_identifier
+
+        #check if the transaction is active (i.e. if it is not aborted or committed)
+        transaction = self.transactions[transaction_ident]
+        if transaction:
+            if transaction.state == TransactionState.ABORTED:
+                #TODO: log that transaction was aborted, couldn't write
+                return 
+            else:
+                stable_sites = []
+                sites_with_variable = self.variables_to_site_map[variable.identifier]
+
+                for site in sites_with_variable:
+                    if site.status == SiteStatus.UP:
+                        stable_sites.append(site)
+                
+                if stable_sites.count() == 0:  #No available site
+                    transaction.state = TransactionState.WAITING
+                    self.transactions[transaction_ident] = transaction
+                    self.waiting_or_blocked_transactions_map[transaction_ident] = instruction
+                
+                else:
+                    #Check if locks can be obtained on all available sites
+                    locks_obtained_all_sites = True
+                    for site in stable_sites:
+                        lock_obtained_status = site.data_manager.obtain_write_lock(instruction, transaction)
+                        locks_obtained_all_sites = locks_obtained_all_sites and lock_obtained_status
+
+                    if not locks_obtained_all_sites: 
+                        #Cannot write, block transaction
+                        transaction.state = TransactionState.BLOCKED
+                        self.transactions[transaction_ident] = transaction
+                        self.waiting_or_blocked_transactions_map[transaction_ident] = instruction
+                    else:
+                        #Value can be written on all the sites, and clear the waiting or blocked transactions, if any
+                        if transaction_ident in self.waiting_or_blocked_transactions_map:
+                            del self.waiting_or_blocked_transactions_map[transaction_ident]
+                            transaction.state = TransactionState.RUNNING
+                            self.transactions[transaction_ident] = transaction
+                        else:
+                            for site in stable_sites:
+                                site.data_manager.write_new_data(self.clock.time, instruction.variable_identifier, instruction.value)
+                                #TODO: log that write successful
+
 
     def dump(self, instruction):
         results = {}
@@ -136,3 +184,6 @@ class TransactionManager:
 
     def recover(self, instruction):
         return "recover"
+
+    def get_variable(self, variable_identifier):
+
