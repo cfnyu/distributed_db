@@ -23,6 +23,7 @@ class TransactionManager:
         self.clock = Clock()
         self.waiting_or_blocked_transactions_map = {}
         self.pending_instructions_queue = {}
+        self.sites_transactions_accessed_log = {}
 
         # Python range function does not include last value so while there
         # Will only be 10 sites, the range must go to 11 to include 10
@@ -137,7 +138,6 @@ class TransactionManager:
                     transaction.state = TransactionState.WAITING
                     self.transactions[transaction_ident] = transaction
                     self.waiting_or_blocked_transactions_map[transaction_ident] = instruction
-                
                 else:
                     #Check if locks can be obtained on all available sites
                     locks_obtained_all_sites = True
@@ -160,6 +160,15 @@ class TransactionManager:
                             for site in stable_sites:
                                 site.data_manager.write_new_data(self.clock.time, instruction.variable_identifier, instruction.value)
                                 #TODO: log that write successful
+                            
+                            #add the sites the value was written to by the transaction in a dictionary
+                            #This will be used to abort the transaction when any of the stable_sites fail
+                            if transaction_ident not in self.sites_transactions_accessed_log:
+                                self.sites_transactions_accessed_log[transaction_ident] = set(stable_sites)
+                            else:
+                                sites_set = self.sites_transactions_accessed_log[transaction_ident]
+                                self.sites_transactions_accessed_log[transaction_ident] = sites_set.union(set(stable_sites))
+
 
 
     def dump(self, instruction):
@@ -185,5 +194,4 @@ class TransactionManager:
     def recover(self, instruction):
         return "recover"
 
-    def get_variable(self, variable_identifier):
 
