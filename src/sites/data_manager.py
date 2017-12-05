@@ -5,14 +5,12 @@ This module represents the Data Manager, which manages all
 Site specific data
 
 """
-from src.sites.lock_manager import LockManager
 
 class DataManager:
     """ Maintains all data for a particular site """
 
     def __init__(self):
         self.entries = {}
-        self.lock_manager = LockManager()
         self.variables = {}
         self.up_time = 0
 
@@ -23,20 +21,20 @@ class DataManager:
             self.entries[variable.identifier] = {}
 
         # The assumption here is 'Time' is a unique number
-        self.entries[variable.identifier][time] = variable.value
+        self.entries[variable.identifier][time] = variable
 
-    def add_variable(self, variable):
+    def add_variable(self, time, variable):
         """ Method to add a new variable that will be managed by this DM """
 
         self.variables[variable.identifier] = variable
 
         # Starting initial variable value
-        self.log(variable, 1)
+        self.log(variable, time)
 
     def get_variable_value(self, identifier):
         """ Returns the last known committed value for this variable """
 
-        return self.variables[identifier]
+        return self.variables[identifier].value
 
         # if variable in self.entries:
         #     # Sort all values by key for a particular variable value in decending order
@@ -51,4 +49,4 @@ class DataManager:
         """ Returns the last known committed value for this variable """
 
         if variable in self.entries:
-            return self.entries[variable][time]
+            return self.entries[variable][time].value

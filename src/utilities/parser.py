@@ -31,22 +31,23 @@ class Parser:
             logger.log("Line " + str(i+1) + ": " + line_stripped)
 
             if self.is_valid_instruction(line_stripped):
-                instruction = Instruction(line_stripped)
+                instruction = line_stripped
                 instructions.append(instruction)
 
         logger.log(instructions)
 
         self.instructions = list(reversed(instructions))
 
-    def get_instruction(self):
+    def get_instruction(self, time):
         """ Get the next instruction to process """
+        no_of_instructions = len(self.instructions)
 
-        if len(self.instructions) > 0:
+        if no_of_instructions > 0:
             instruction = self.instructions.pop()
 
             self.logger.log("Poping: " + str(instruction))
 
-            return instruction
+            return Instruction(time, instruction)
 
     def is_valid_instruction(self, value):
         """ Check value to see if it matches an approved instruction """

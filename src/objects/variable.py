@@ -14,6 +14,7 @@ class Variable:
         self.replicated = (var_id / 2 == 0)
         self.readable = True
         self.value = 10 * var_id
+        self.last_committed_value = self.value
 
     def __repr__(self):
         return "{ Index: %i, Id: %s, Replicated: %s, Readable: %s, Value: %i }\n" % \
