@@ -24,3 +24,11 @@ class Site:
         """ Dump the results of all commits values to stdout """
 
         print self.data_manager.variables
+
+    def recover(self):
+        """ Recover this site """
+        pass
+
+    def fail(self):
+        """ Fail this site """
+        pass

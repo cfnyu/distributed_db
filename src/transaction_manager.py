@@ -5,7 +5,6 @@ This module represents the Transaction Manager, which manages
 Transactions across all sites
 
 """
-from objects.site import Site
 from objects.clock import Clock
 from objects.instruction import InstructionType
 
@@ -13,15 +12,7 @@ class TransactionManager:
     """ Maintains all transactions for the database """
 
     def __init__(self, logger):
-        self.sites = []
-        self.clock = Clock()
         self.logger = logger
-
-        # Python range function does not include last value so while there
-        # Will only be 10 sites, the range must go to 11 to include 10
-        for i in range(1, 11):
-            site = Site(i, logger)
-            self.sites.append(site)
 
     def execute(self, instruction):
 
@@ -34,3 +25,31 @@ class TransactionManager:
                 pass
 
         return "Process instruction"
+
+    def begin_transaction(self):
+        """ Begin a Transaction """
+        pass
+
+    def end_transaction(self):
+        """ End a Transaction """
+        pass
+
+    def get(self):
+        """ Get a Transaction """
+        pass
+
+    def commit(self):
+        """ Commit a Transaction """
+        pass
+
+    def abort(self):
+        """ Abort a Transaction """
+        pass
+
+    def read(self):
+        """ Read the value of a Variable """
+        pass
+
+    def write(self):
+        """ Write the value of a Variable """
+        pass
