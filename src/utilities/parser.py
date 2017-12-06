@@ -11,7 +11,7 @@ Example:
     $ python parser.py <file_name> [-v]
 
 """
-from src.objects.instruction import Instruction
+from objects.instruction import Instruction
 
 class Parser:
     """ Parse the input file and store each line in instructions list """

@@ -5,9 +5,9 @@
     Concurrency control, deadlock detection, replication, and failure recovery
 """
 import sys
-from src.transaction_manager import TransactionManager
-from src.utilities.logger import Logger
-from src.utilities.parser import Parser
+from transaction_manager import TransactionManager
+from utilities.logger import Logger
+from utilities.parser import Parser
 
 LOGGER = Logger()
 SITES = []
@@ -29,12 +29,14 @@ def validate_args():
     """ Validate if the user arguments are valid """
 
     if len(sys.argv) < 2 or sys.argv[1] == '-v':
-        print "To parse a file use the following command: parser.py <file_name> [-v]"
+        print "To parse a file use the following command: main.py <file_name> [-v]"
         return False
 
     if len(sys.argv) > 2 and sys.argv[2] == '-v':
         print "Verbose set to true"
         LOGGER.show_stdout()
+
+    return True
 
 if __name__ == "__main__":
     main()

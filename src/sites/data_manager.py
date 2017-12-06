@@ -5,8 +5,8 @@ This module represents the Data Manager, which manages all
 Site specific data
 
 """
-from src.objects.lock import Lock, LockType
-from src.objects.transaction import TransactionType
+from objects.lock import Lock, LockType
+from objects.transaction import TransactionType
 
 class DataManager:
     """ Maintains all data for a particular site """
@@ -53,7 +53,7 @@ class DataManager:
                 return self.get_variable_at_time(variable, time-1)
             else:
                 return self.entries[variable][time][0].value
-                
+
     def obtain_write_lock(self, instruction, transaction):
         """ Obtain the Write Lock for a Transaction """
 
@@ -65,8 +65,9 @@ class DataManager:
 
         #Check if there are locks already for that variable
         if variable_ident not in self.locks: 
+            self.locks[variable_ident] = []
             lock = Lock(lock_type, transaction, variable)
-            self.locks[variable_ident] = [lock]
+            self.locks[variable_ident].append(lock)
             #TODO: log lock acquired 
             return None
         else:
