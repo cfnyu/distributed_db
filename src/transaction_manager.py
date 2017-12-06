@@ -21,8 +21,8 @@ class TransactionManager:
         self.site_to_variables_map = {}
         self.variables_to_site_map = {}
         self.clock = Clock()
-        self.waiting_or_blocked_transactions_map = {}
-        self.pending_instructions_queue = {}
+        self.waiting_transactions_instructions_map = {}
+        self.blocked_transactions_instructions_map = {}
         self.sites_transactions_accessed_log = {}
 
         # Python range function does not include last value so while there
@@ -139,37 +139,55 @@ class TransactionManager:
                 if len(stable_sites) == 0:  #No available site
                     transaction.state = TransactionState.WAITING
                     self.transactions[transaction_ident] = transaction
-                    self.waiting_or_blocked_transactions_map[transaction_ident] = instruction
+                    self.waiting_transactions_instructions_map[transaction_ident] = instruction
                 else:
-                    #Check if locks can be obtained on all available sites
-                    locks_obtained_all_sites = True
+                    #check if this instruction was in waiting map
+                    if transaction_ident in self.waiting_transactions_instructions_map:
+                        del self.waiting_transactions_instructions_map[transaction_ident]
+                        transaction.state = TransactionState.RUNNING
+                        self.transactions[transaction_ident] = transaction
+                    
+                    is_transaction_blocked = False
                     for site in stable_sites:
-                        lock_obtained_status = self.sites[site.identifer].data_manager.obtain_write_lock(instruction, transaction)
-                        locks_obtained_all_sites = locks_obtained_all_sites and lock_obtained_status
+                        #this checks if lock can be obtained on the available site, 
+                        # if lock can be obtained None is returned, and if not, returns the blocking transaction identifier
+                        blocked_transaction_id = self.sites[site.identifer].data_manager.obtain_write_lock(instruction, transaction)
+                        #if transaction is blocked, then append in the blocked instructions table and then break
+                        if blocked_transaction_id:
+                            if blocked_transaction_id not in self.blocked_transactions_instructions_map:
+                                self.blocked_transactions_instructions_map[blocked_transaction_id] = instruction
+                            else:
+                                self.blocked_transactions_instructions_map[blocked_transaction_id].append(instruction)
+                            is_transaction_blocked = True
+                        break
 
-                    if not locks_obtained_all_sites: 
-                        #Cannot write, block transaction
+                    if is_transaction_blocked:
                         transaction.state = TransactionState.BLOCKED
                         self.transactions[transaction_ident] = transaction
-                        self.waiting_or_blocked_transactions_map[transaction_ident] = instruction
+                        #checkForDeadlock
                     else:
-                        #Value can be written on all the sites, and clear the waiting or blocked transactions, if any
-                        if transaction_ident in self.waiting_or_blocked_transactions_map:
-                            del self.waiting_or_blocked_transactions_map[transaction_ident]
+                        #remove instruction from blocked_transaction_instructions_map if present
+                        for blocked_transaction_id in self.blocked_transactions_instructions_map:
+                            if instruction in self.blocked_transactions_instructions_map[blocked_transaction_id]:
+                                self.blocked_transactions_instructions_map[blocked_transaction_id].remove(instruction)
+                        
+                        if transaction.state != TransactionState.RUNNING:
                             transaction.state = TransactionState.RUNNING
                             self.transactions[transaction_ident] = transaction
-                        else:
-                            for site in stable_sites:
-                                self.sites[site.identifer].data_manager.write_new_data(self.clock.time, instruction.variable_identifier, instruction.value)
-                                #TODO: log/print that write successful provided commit happens
+
+                        #do the actual updating here       
+                        for site in stable_sites:
+                            self.sites[site.identifer].data_manager.write_new_data(
+                                self.clock.time, instruction.variable_identifier, instruction.value, instruction.transaction_identifier)
+                            #TODO: log/print that write successful provided commit happens
                             
-                            #add the sites the value was written to by the transaction in a dictionary
-                            #This will be used to abort the transaction when any of the stable_sites fail
-                            if transaction_ident not in self.sites_transactions_accessed_log:
-                                self.sites_transactions_accessed_log[transaction_ident] = set(stable_sites)
-                            else:
-                                sites_set = self.sites_transactions_accessed_log[transaction_ident]
-                                self.sites_transactions_accessed_log[transaction_ident] = sites_set.union(set(stable_sites))
+                        #add the sites the value was written to by the transaction in a dictionary
+                        #This will be used to abort the transaction when any of the stable_sites fail
+                        if transaction_ident not in self.sites_transactions_accessed_log:
+                            self.sites_transactions_accessed_log[transaction_ident] = set(stable_sites)
+                        else:
+                            sites_set = self.sites_transactions_accessed_log[transaction_ident]
+                            self.sites_transactions_accessed_log[transaction_ident] = sites_set.union(set(stable_sites))
 
 
 
