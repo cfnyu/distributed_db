@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """ Test Transaction Manager """
-import unittest
+import ast
 import sys
+import unittest
+
 from contextlib import contextmanager
 from StringIO import StringIO
 from src.utilities.logger import Logger
@@ -46,6 +48,37 @@ class TransactionManagerTestCase(unittest.TestCase):
         self.assertIsNone(trans1.end_time)
         self.assertEquals(trans1.state, TransactionState.WAITING)
 
+    def test_begin_ro_transaction_snapshot(self):
+        """ Testing that a snapshot holds the correct values """
+
+        instruction = Instruction("BeginRO(T1)")
+        self.transaction_manager.execute(instruction)
+        trans1 = self.transaction_manager.transactions["T1"]
+        site_1 = self.transaction_manager.readonly_snapshots["T1"][1]
+        site_2 = self.transaction_manager.readonly_snapshots["T1"][2]
+        site_3 = self.transaction_manager.readonly_snapshots["T1"][3]
+        site_3 = self.transaction_manager.readonly_snapshots["T1"][3]
+        site_4 = self.transaction_manager.readonly_snapshots["T1"][4]
+        site_5 = self.transaction_manager.readonly_snapshots["T1"][5]
+        site_6 = self.transaction_manager.readonly_snapshots["T1"][6]
+        site_7 = self.transaction_manager.readonly_snapshots["T1"][7]
+        site_8 = self.transaction_manager.readonly_snapshots["T1"][8]
+        site_9 = self.transaction_manager.readonly_snapshots["T1"][9]
+        site_10 = self.transaction_manager.readonly_snapshots["T1"][10]
+
+        self.assertTrue(instruction.transaction_identifier in self.transaction_manager.readonly_snapshots)
+        self.assertEquals(len(self.transaction_manager.readonly_snapshots["T1"].keys()), 10)
+        self.assertEquals(site_1, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x20', 'x4'])
+        self.assertEquals(site_2, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x11', 'x12', 'x1', 'x6', 'x20', 'x4'])
+        self.assertEquals(site_3, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x20', 'x4'])
+        self.assertEquals(site_4, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x3', 'x12', 'x13', 'x6', 'x20', 'x4'])
+        self.assertEquals(site_5, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x20', 'x4'])
+        self.assertEquals(site_6, ['x14', 'x20', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x15', 'x4', 'x5'])
+        self.assertEquals(site_7, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x20', 'x4'])
+        self.assertEquals(site_8, ['x14', 'x20', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x7', 'x4', 'x17'])
+        self.assertEquals(site_9, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x20', 'x4'])
+        self.assertEquals(site_10, ['x19', 'x14', 'x18', 'x10', 'x8', 'x9', 'x16', 'x2', 'x12', 'x6', 'x20', 'x4'])
+
     def test_execute_dump_all_transaction(self):
         """ Given a Dump All instruction, dump method will be called """
 
@@ -55,6 +88,7 @@ class TransactionManagerTestCase(unittest.TestCase):
             self.transaction_manager.execute(instruction)
 
         output = out.getvalue().strip()
+
         self.assertEqual(output, "{1: {'x14': { x14: 140 }, 'x18': { x18: 180 }, 'x10': { x10: 100 }, 'x8': { x8: 80 }, 'x16': { x16: 160 }, 'x2': { x2: 20 }, 'x12': { x12: 120 }, 'x6': { x6: 60 }, 'x20': { x20: 200 }, 'x4': { x4: 40 }}, 2: {'x14': { x14: 140 }, 'x18': { x18: 180 }, 'x10': { x10: 100 }, 'x8': { x8: 80 }, 'x16': { x16: 160 }, 'x2': { x2: 20 }, 'x11': { x11: 110 }, 'x12': { x12: 120 }, 'x1': { x1: 10 }, 'x6': { x6: 60 }, 'x20': { x20: 200 }, 'x4': { x4: 40 }}, 3: {'x14': { x14: 140 }, 'x18': { x18: 180 }, 'x10': { x10: 100 }, 'x8': { x8: 80 }, 'x16': { x16: 160 }, 'x2': { x2: 20 }, 'x12': { x12: 120 }, 'x6': { x6: 60 }, 'x20': { x20: 200 }, 'x4': { x4: 40 }}, 4: {'x14': { x14: 140 }, 'x18': { x18: 180 }, 'x10': { x10: 100 }, 'x8': { x8: 80 }, 'x16': { x16: 160 }, 'x2': { x2: 20 }, 'x3': { x3: 30 }, 'x12': { x12: 120 }, 'x13': { x13: 130 }, 'x6': { x6: 60 }, 'x20': { x20: 200 }, 'x4': { x4: 40 }}, 5: {'x14': { x14: 140 }, 'x18': { x18: 180 }, 'x10': { x10: 100 }, 'x8': { x8: 80 }, 'x16': { x16: 160 }, 'x2': { x2: 20 }, 'x12': { x12: 120 }, 'x6': { x6: 60 }, 'x20': { x20: 200 }, 'x4': { x4: 40 }}, 6: {'x14': { x14: 140 }, 'x20': { x20: 200 }, 'x18': { x18: 180 }, 'x10': { x10: 100 }, 'x8': { x8: 80 }, 'x16': { x16: 160 }, 'x2': { x2: 20 }, 'x12': { x12: 120 }, 'x6': { x6: 60 }, 'x15': { x15: 150 }, 'x4': { x4: 40 }, 'x5': { x5: 50 }}, 7: {'x14': { x14: 140 }, 'x18': { x18: 180 }, 'x10': { x10: 100 }, 'x8': { x8: 80 }, 'x16': { x16: 160 }, 'x2': { x2: 20 }, 'x12': { x12: 120 }, 'x6': { x6: 60 }, 'x20': { x20: 200 }, 'x4': { x4: 40 }}, 8: {'x14': { x14: 140 }, 'x20': { x20: 200 }, 'x18': { x18: 180 }, 'x10': { x10: 100 }, 'x8': { x8: 80 }, 'x16': { x16: 160 }, 'x2': { x2: 20 }, 'x12': { x12: 120 }, 'x6': { x6: 60 }, 'x7': { x7: 70 }, 'x4': { x4: 40 }, 'x17': { x17: 170 }}, 9: {'x14': { x14: 140 }, 'x18': { x18: 180 }, 'x10': { x10: 100 }, 'x8': { x8: 80 }, 'x16': { x16: 160 }, 'x2': { x2: 20 }, 'x12': { x12: 120 }, 'x6': { x6: 60 }, 'x20': { x20: 200 }, 'x4': { x4: 40 }}, 10: {'x19': { x19: 190 }, 'x14': { x14: 140 }, 'x18': { x18: 180 }, 'x10': { x10: 100 }, 'x8': { x8: 80 }, 'x9': { x9: 90 }, 'x16': { x16: 160 }, 'x2': { x2: 20 }, 'x12': { x12: 120 }, 'x6': { x6: 60 }, 'x20': { x20: 200 }, 'x4': { x4: 40 }}}")
 
     def test_execute_dump_site_transaction(self):
