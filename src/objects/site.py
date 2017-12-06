@@ -24,7 +24,7 @@ class Site:
         # Load all variables
         for i in range(1, 21):
             if i % 2 == 0 or 1 + (i % 10) == site_id:
-                logger.log("Adding " + str(Variable(i)))
+                logger.log("Adding " + str(Variable(i)) + " at time "+ str(time))
                 self.data_manager.add_variable(time, Variable(i))
 
     def dump(self):

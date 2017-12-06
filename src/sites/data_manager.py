@@ -6,6 +6,8 @@ Site specific data
 
 """
 
+from src.objects.lock import Lock, LockType
+
 class DataManager:
     """ Maintains all data for a particular site """
 
@@ -13,15 +15,16 @@ class DataManager:
         self.entries = {}
         self.variables = {}
         self.up_time = 0
+        self.locks = {}
 
-    def log(self, variable, time):
+    def log(self, variable, time, trans_identifier):
         """ Log all variable changes. """
 
         if variable.identifier not in self.entries:
             self.entries[variable.identifier] = {}
 
         # The assumption here is 'Time' is a unique number
-        self.entries[variable.identifier][time] = variable
+        self.entries[variable.identifier][time] = (variable, trans_identifier)
 
     def add_variable(self, time, variable):
         """ Method to add a new variable that will be managed by this DM """
@@ -29,7 +32,13 @@ class DataManager:
         self.variables[variable.identifier] = variable
 
         # Starting initial variable value
-        self.log(variable, time)
+        self.log(variable, time, "T")
+
+    def write_new_data(self, time, variable_ident, new_value, trans_identifier):
+        """ Method to write the new value of the variable. This will go into the log """
+        #update the new value of the variable
+        self.variables[variable_ident].value = new_value
+        self.log(self.variables[variable_ident], time, trans_identifier)
 
     def get_variable_value(self, identifier):
         """ Returns the last known committed value for this variable """
@@ -52,4 +61,40 @@ class DataManager:
             if not time in self.entries[variable]:
                 return self.get_variable_at_time(variable, time-1)
             else:
-                return self.entries[variable][time].value
+                return self.entries[variable][time][0].value
+                
+    def obtain_write_lock(self, instruction, transaction):
+        """ Obtain the Write Lock for a Transaction """
+
+        lock_type = LockType.WRITE
+
+        #get the variable from the variable identifier
+        variable_ident = instruction.variable_identifier
+        variable = self.variables[variable_ident]
+
+        #Check if there are locks already for that variable
+        if variable_ident not in self.locks: 
+            lock = Lock(lock_type, transaction, variable)
+            self.locks[variable_ident] = [lock]
+            #TODO: log lock acquired 
+            return None
+        else:
+            lock_list = self.locks[variable_ident]
+            
+            #If any transaction has a lock on the variable, this transaction cannot obtain a lock
+            for lock in lock_list:
+                if lock.transaction.identifier != transaction.identifier:
+                    #TODO: log lock was not acquired
+                    return lock.transaction.identifier
+
+            #If the same transition has a lock, we just update the lock type
+            #There should only be one lock for the variable in this case
+            for idx, lock in enumerate(lock_list):
+                if lock.transaction.identifier == transaction.identifier:
+                    self.locks[variable_ident][idx].lock_type = LockType.WRITE
+            #TODO: log lock updated and acquired
+            return None
+
+
+
+        
