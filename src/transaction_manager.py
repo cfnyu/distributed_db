@@ -114,6 +114,31 @@ class TransactionManager:
 
     def read(self, instruction):
         """ Read the value of a Variable """
+
+        if instruction.transaction_identifier not in self.transactions:
+            raise ValueError("Transaction %s was never started" % \
+                             instruction.transaction_identifier)
+
+        transaction = self.transactions[instruction.transaction_identifier]
+        possible_sites_ids = self.variables_to_site_map[instruction.variable_identifier]
+        possible_sites = len(possible_sites_ids)
+
+        if possible_sites == 0:
+            # TODO: Store transaction in the waiting bucket
+            pass
+        else:
+            for site_id in possible_sites_ids:
+                site = self.sites[site_id]
+                if site.status == SiteStatus.UP:
+                    if transaction.transaction_type == TransactionType.READ_ONLY:
+                        if site_id in self.readonly_snapshots[transaction.identifier]:
+                            return self.readonly_snapshots[transaction.identifier][site_id]
+                    else:
+                        if site.data_manager.obtain_read_lock(transaction, instruction):
+                            value = site.data_manager.read(transaction, instruction)
+                            print "%s: %s at site %s" % \
+                                (instruction.variable_identifier, str(value), str(site_id))
+
         return "Read the value of a Variable"
 
     def write(self, instruction):

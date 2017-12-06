@@ -23,7 +23,7 @@ class InstructionType(Enum):
     READ = 8,
     RECOVER = 9,
     WRITE = 10
-    
+
 class Instruction:
     """ This class represents an instruction """
 
@@ -37,16 +37,16 @@ class Instruction:
         if self.instruction_type == InstructionType.BEGIN or \
            self.instruction_type == InstructionType.BEGIN_RO or \
            self.instruction_type == InstructionType.END:
-            self.transaction_identifier = self.get_single_value(instruction_str)
+            self.transaction_identifier = self.get_single_value(instruction_str).strip()
         elif self.instruction_type == InstructionType.READ:
             values = self.get_multiple_values(instruction_str)
-            self.transaction_identifier = values[0]
-            self.variable_identifier = values[1]
+            self.transaction_identifier = values[0].strip()
+            self.variable_identifier = values[1].strip()
         elif self.instruction_type == InstructionType.WRITE:
             values = self.get_multiple_values(instruction_str)
-            self.transaction_identifier = values[0]
-            self.variable_identifier = values[1]
-            self.value = values[2]
+            self.transaction_identifier = values[0].strip()
+            self.variable_identifier = values[1].strip()
+            self.value = values[2].strip()
         elif self.instruction_type == InstructionType.FAIL or \
              self.instruction_type == InstructionType.RECOVER or \
              self.instruction_type == InstructionType.DUMP_SITE:

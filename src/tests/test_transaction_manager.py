@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 """ Test Transaction Manager """
-import ast
-import sys
 import unittest
-
+import sys
 from contextlib import contextmanager
 from StringIO import StringIO
-from src.utilities.logger import Logger
 from src.objects.transaction import TransactionType, TransactionState
-from src.transaction_manager import TransactionManager
 from src.objects.instruction import Instruction
+from src.transaction_manager import TransactionManager
+from src.utilities.logger import Logger
 
 class TransactionManagerTestCase(unittest.TestCase):
     """ Test cases for the Transaction Manager """
@@ -53,21 +51,21 @@ class TransactionManagerTestCase(unittest.TestCase):
 
         instruction = Instruction("BeginRO(T1)")
         self.transaction_manager.execute(instruction)
-        trans1 = self.transaction_manager.transactions["T1"]
-        site_1 = self.transaction_manager.readonly_snapshots["T1"][1]
-        site_2 = self.transaction_manager.readonly_snapshots["T1"][2]
-        site_3 = self.transaction_manager.readonly_snapshots["T1"][3]
-        site_3 = self.transaction_manager.readonly_snapshots["T1"][3]
-        site_4 = self.transaction_manager.readonly_snapshots["T1"][4]
-        site_5 = self.transaction_manager.readonly_snapshots["T1"][5]
-        site_6 = self.transaction_manager.readonly_snapshots["T1"][6]
-        site_7 = self.transaction_manager.readonly_snapshots["T1"][7]
-        site_8 = self.transaction_manager.readonly_snapshots["T1"][8]
-        site_9 = self.transaction_manager.readonly_snapshots["T1"][9]
-        site_10 = self.transaction_manager.readonly_snapshots["T1"][10]
+        trans1 = self.transaction_manager.readonly_snapshots["T1"]
+        site_1 = trans1[1]
+        site_2 = trans1[2]
+        site_3 = trans1[3]
+        site_3 = trans1[3]
+        site_4 = trans1[4]
+        site_5 = trans1[5]
+        site_6 = trans1[6]
+        site_7 = trans1[7]
+        site_8 = trans1[8]
+        site_9 = trans1[9]
+        site_10 = trans1[10]
 
         self.assertTrue(instruction.transaction_identifier in self.transaction_manager.readonly_snapshots)
-        self.assertEquals(len(self.transaction_manager.readonly_snapshots["T1"].keys()), 10)
+        self.assertEquals(len(trans1.keys()), 10)
         self.assertEquals(site_1, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x20', 'x4'])
         self.assertEquals(site_2, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x11', 'x12', 'x1', 'x6', 'x20', 'x4'])
         self.assertEquals(site_3, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x20', 'x4'])
@@ -84,7 +82,7 @@ class TransactionManagerTestCase(unittest.TestCase):
 
         instruction = Instruction("dump()")
 
-        with captured_output() as (out, err):
+        with std_out() as (out, err):
             self.transaction_manager.execute(instruction)
 
         output = out.getvalue().strip()
@@ -96,7 +94,7 @@ class TransactionManagerTestCase(unittest.TestCase):
 
         instruction = Instruction("dump(3)")
 
-        with captured_output() as (out, err):
+        with std_out() as (out, err):
             self.transaction_manager.execute(instruction)
 
         output = out.getvalue().strip()
@@ -108,7 +106,7 @@ class TransactionManagerTestCase(unittest.TestCase):
 
         instruction = Instruction("dump(3)")
 
-        with captured_output() as (out, err):
+        with std_out() as (out, err):
             self.transaction_manager.execute(instruction)
 
         output = out.getvalue().strip()
@@ -132,15 +130,6 @@ class TransactionManagerTestCase(unittest.TestCase):
 
         self.assertEquals(result, "fail")
 
-    def test_execute_read_transaction(self):
-        """ Given a Read instruction, read method will be called """
-        # TODO: Re-write function once read function has been written
-
-        instruction = Instruction("R(T2,x2)")
-        result = self.transaction_manager.execute(instruction)
-
-        self.assertEquals(result, "Read the value of a Variable")
-
     def test_execute_recover_transaction(self):
         """ Given a Recover instruction, recover transaction will be called """
         # TODO: Re-write function once recover function has been written
@@ -160,7 +149,9 @@ class TransactionManagerTestCase(unittest.TestCase):
         self.assertEquals(result, "Write the value of a Variable")
 
 @contextmanager
-def captured_output():
+def std_out():
+    """ Capture stdout """
+
     new_out, new_err = StringIO(), StringIO()
     old_out, old_err = sys.stdout, sys.stderr
     try:
@@ -168,3 +159,4 @@ def captured_output():
         yield sys.stdout, sys.stderr
     finally:
         sys.stdout, sys.stderr = old_out, old_err
+

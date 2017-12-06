@@ -5,8 +5,8 @@ This module represents the Data Manager, which manages all
 Site specific data
 
 """
-
 from src.objects.lock import Lock, LockType
+from src.objects.transaction import TransactionType
 
 class DataManager:
     """ Maintains all data for a particular site """
@@ -44,15 +44,6 @@ class DataManager:
         """ Returns the last known committed value for this variable """
 
         return self.variables[identifier].value
-
-        # if variable in self.entries:
-        #     # Sort all values by key for a particular variable value in decending order
-        #     # And return the first value, which should represent the last commit value
-        #     # For this variable
-        #     time_idx = 0
-        #     value_idx = 1
-        #     return sorted(self.entries[variable].items(),
-        #                   key=lambda kv: kv[time_idx], reverse=True)[0][value_idx]
 
     def get_variable_at_time(self, variable, time):
         """ Returns the last known committed value for this variable """
@@ -95,6 +86,49 @@ class DataManager:
             #TODO: log lock updated and acquired
             return None
 
+    def obtain_read_lock(self, transaction, instruction):
+        """ Gets a read lock, if possible """
 
+        variable = self.variables[instruction.variable_identifier]
 
-        
+        if not variable.readable:
+            return False
+
+        if transaction.transaction_type == TransactionType.READ_ONLY:
+            return True
+
+        if variable.identifier in self.locks:
+            for lock in self.locks[variable.identifier]:
+                if lock.transaction.index == transaction.index:
+                    return True
+
+            for lock in self.locks[variable.identifier]:
+                if lock.lock_type == LockType.WRITE:
+                    return False
+        else:
+            self.locks[variable.identifier] = []
+
+        new_lock = Lock(LockType.READ, transaction, variable)
+        self.locks[variable.identifier].append(new_lock)
+
+        return True
+
+    def get_write_lock_value(self, transaction, instruction):
+        """ If a variable has a Write lock return the value of that write """
+
+        if instruction.variable_identifier in self.locks:
+            for lock in self.locks[instruction.variable_identifier]:
+                if lock.lock_type == LockType.WRITE and lock.transaction.index == transaction.index:
+                    return lock.variable.value
+
+    def read(self, transaction, instruction):
+        """ Gets the lated valued for this transaction """
+
+        variable = self.variables[instruction.variable_identifier]
+
+        write_value = self.get_write_lock_value(transaction, instruction)
+
+        if not write_value:
+            return variable.last_committed_value
+
+        return write_value
