@@ -5,7 +5,6 @@ import os
 
 from src.utilities.parser import Parser
 from src.utilities.logger import Logger
-from src.objects.clock import Clock
 from src.objects.instruction import Instruction, InstructionType
 
 class ParserTestCase(unittest.TestCase):

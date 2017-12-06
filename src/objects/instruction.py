@@ -5,13 +5,13 @@ This module represents a single instruction
 
 """
 import re
-from enum import Enum
+from enum import IntEnum
 
 TRANSACTION_EXPR = "\s*(t[1-9]|t10)\s*"
 VARIABLE_EXPR = "\s*(x[1-9]{1}|x1[1-9]{1}|x10|x20)\s*"
 SITE_EXPR = "\s*([1-9]|10)\s*"
 
-class InstructionType(Enum):
+class InstructionType(IntEnum):
     """ Represents the Instruction Type """
     BEGIN = 1,
     BEGIN_RO = 2,

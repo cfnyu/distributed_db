@@ -4,9 +4,9 @@
 This module represents a single Lock
 
 """
-from enum import Enum
+from enum import IntEnum
 
-class LockType(Enum):
+class LockType(IntEnum):
     """ Represents the Lock Type """
     READ = 1,
     WRITE = 2

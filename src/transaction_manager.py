@@ -5,10 +5,10 @@ This module represents the Transaction Manager, which manages
 Transactions across all sites
 
 """
-from src.objects.clock import Clock
-from src.objects.site import Site, SiteStatus
-from src.objects.instruction import InstructionType
-from src.objects.transaction import Transaction, TransactionType, TransactionState
+from objects.clock import Clock
+from objects.site import Site, SiteStatus
+from objects.instruction import InstructionType
+from objects.transaction import Transaction, TransactionType, TransactionState
 
 class TransactionManager:
     """ Maintains all transactions for the database """
@@ -30,10 +30,10 @@ class TransactionManager:
         for i in range(1, 11):
             site = Site(i, self.clock.time, logger)
             self.sites[site.identifer] = site
-            self.site_to_variables_map[i] = site.data_manager.variables
+            self.site_to_variables_map[site.identifer] = site.data_manager.variables
 
-            for variable in site.data_manager.variables:
-                if variable not in self.variables_to_site_map:
+            for var_id, variable in site.data_manager.variables.iteritems():
+                if variable.identifier not in self.variables_to_site_map:
                     self.variables_to_site_map[variable.identifier] = []
 
                 self.variables_to_site_map[variable.identifier].append(site.identifer)
@@ -92,8 +92,12 @@ class TransactionManager:
 
         self.transactions[trans_ident] = transaction
 
-    def end_transaction(self, instruction):
+    def end_transaction(self, transaction):
         """ End a Transaction """
+
+        # if transaction.transaction_type == TransactionType.READ_ONLY:
+        #     for site in self.sites_transactions_accessed_log[transaction_ident]:
+        #         if 
         return "End a Transaction"
 
     def get(self, instruction):
@@ -216,9 +220,9 @@ class TransactionManager:
                             sites_set = self.sites_transactions_accessed_log[transaction_ident]
                             self.sites_transactions_accessed_log[transaction_ident] = sites_set.union(set(stable_sites))
 
-
-
     def dump(self, instruction):
+        """ Prints out variable values to stdout """
+
         results = {}
         if instruction.site_identifier:
             results = self.sites[instruction.site_identifier].dump()

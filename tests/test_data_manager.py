@@ -87,8 +87,14 @@ class DataManagerTestCase(unittest.TestCase):
         instruction = Instruction("R(T1, x2)")
 
         self.assertTrue(self.data_manager.obtain_read_lock(transaction, instruction))
-        self.assertEquals(self.data_manager.locks["x2"][0].lock_type, LockType.READ)
-        self.assertEquals(self.data_manager.locks["x2"][0].transaction.index, 1)
+        new_lock = self.data_manager.locks["x2"][0]
+        
+        print "Locks", self.data_manager.locks["x2"]
+        print "Type", type(new_lock), "Lock:", new_lock
+        print "Lock Type", new_lock.lock_type
+
+        self.assertTrue(new_lock.lock_type == LockType.READ)
+        self.assertEquals(new_lock.transaction.index, 1)
 
         transaction = Transaction("T2", TransactionType.READ_WRITE, 1)
         instruction = Instruction("R(T2, x2)")
@@ -101,7 +107,7 @@ class DataManagerTestCase(unittest.TestCase):
 
         transaction = Transaction("T1", TransactionType.READ_WRITE, 1)
         instruction = Instruction("W(T1,x2, 103)")
-        self.data_manager.locks["x2"] = [Lock(LockType.WRITE, transaction, instruction)]
+        self.data_manager.obtain_write_lock(instruction, transaction)
 
         transaction = Transaction("T2", TransactionType.READ_WRITE, 1)
         instruction = Instruction("R(T2, x2)")

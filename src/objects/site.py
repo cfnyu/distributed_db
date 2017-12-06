@@ -5,8 +5,8 @@ This module represents a site
 
 """
 from enum import Enum
-from src.sites.data_manager import DataManager
-from src.objects.variable import Variable
+from sites.data_manager import DataManager
+from objects.variable import Variable
 
 class SiteStatus(Enum):
     """ Represents the possible status of a Site """

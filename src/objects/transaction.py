@@ -4,17 +4,17 @@
 This module represents a single transaction object
 
 """
-from enum import Enum
+from enum import IntEnum
 
-class TransactionState(Enum):
+class TransactionState(IntEnum):
     """ Represents the Transaction State """
     ABORTED = 1, # When a transaction is killed before it is ended
-    BLOCK = 2, # If the transaction is waiting for a lock to be released
+    BLOCKED = 2, # If the transaction is waiting for a lock to be released
     COMMITTED = 3,
     RUNNING = 4,
     WAITING = 5 # Waiting for an available site
 
-class TransactionType(Enum):
+class TransactionType(IntEnum):
     """ Represents the Transaction Type """
     READ_ONLY = 1,
     READ_WRITE = 2
@@ -28,6 +28,6 @@ class Transaction:
         self.transaction_type = transaction_type
         self.start_time = start_time
         self.end_time = None
-        self.state = TransactionState.RUNNING
+        self.state = TransactionState.WAITING
         # Wait time?
         # Buffer
