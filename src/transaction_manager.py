@@ -32,7 +32,7 @@ class TransactionManager:
             self.sites[site.identifer] = site
             self.site_to_variables_map[i] = site.data_manager.variables
 
-            for variable in site.data_manager.variables:
+            for variable in site.data_manager.variables.values():
                 if variable not in self.variables_to_site_map:
                     self.variables_to_site_map[variable.identifier] = []
 
@@ -143,6 +143,10 @@ class TransactionManager:
 
     def write(self, instruction):
         """ Write the value of a Variable """
+
+        if instruction.transaction_identifier not in self.transactions:
+            raise ValueError("Transaction %s was never started" % \
+                             instruction.transaction_identifier)
 
         #get the transaction identifier from the instruction
         transaction_ident = instruction.transaction_identifier

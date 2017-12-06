@@ -15,14 +15,17 @@ class DataManagerTestCase(unittest.TestCase):
     def setUp(self):
         logger = Logger()
         # logger.show_stdout()
-        self.data_manager = DataManager()
+        variables = {}
         site_id = 1
 
         # Load all variables
         for i in range(1, 21):
             if i % 2 == 0 or 1 + (i % 10) == site_id:
-                logger.log("Adding " + str(Variable(i)))
-                self.data_manager.add_variable(1, Variable(i))
+                new_variable = Variable(1, i)
+                logger.log("Adding %s at time %s" % (new_variable.identifier, "1"))
+                variables[new_variable.identifier] = new_variable
+        
+        self.data_manager = DataManager(variables)
 
     def test_obtain_read_lock_with_no_existing_locks(self):
         """ Test that a lock can be obtained when no locks exist """
@@ -43,8 +46,8 @@ class DataManagerTestCase(unittest.TestCase):
         """ Test that a lock can be obtained when other locks exist """
 
         dummy_tran = Transaction("T3", TransactionType.READ_WRITE, 1)
-        dummy_var = Variable(4)
-        dummy_var1 = Variable(6)
+        dummy_var = Variable(1, 4)
+        dummy_var1 = Variable(1, 6)
 
         self.data_manager.locks["x4"] = [Lock(LockType.READ, dummy_tran, dummy_var)]
         self.data_manager.locks["x6"] = [Lock(LockType.WRITE, dummy_tran, dummy_var1)]
@@ -127,11 +130,27 @@ class DataManagerTestCase(unittest.TestCase):
 
         self.assertEquals(self.data_manager.read(transaction, instruction), 20)
 
-    @unittest.skip("NEEDS TO BE IMPLEMENTED")
     def test_read_with_after_transaction_has_a_write(self):
-        """ Ensure the lastest submitted value for the current transaction is returned """
+        """ Get the read value from last write on a transaction """
 
         transaction = Transaction("T1", TransactionType.READ_WRITE, 1)
         instruction = Instruction("R(T1, x2)")
+        self.assertFalse("x2" in self.data_manager.locks)
 
+        self.data_manager.obtain_write_lock(instruction, transaction)
+
+        self.assertTrue("x2" in self.data_manager.locks)
         self.assertEquals(self.data_manager.read(transaction, instruction), 20)
+
+    def test_entries_maintains_values_per_transaction(self):
+        """ Ensure that entities is keeping the log of committed values per transaction """
+
+        self.assertEquals(self.data_manager.variables["x6"].value, 60)
+        self.data_manager.write_new_data(2, "x6", 999, "T1")
+
+        # Confirm the latest Committed Value wasn't changed by a transaction update to variable
+        self.assertEquals(self.data_manager.variables["x6"].value, 60)
+
+        # Confirm that the new write just adds to the log
+        self.assertEquals(self.data_manager.entries["T1"]["x6"].written_values[1], 60)
+        self.assertEquals(self.data_manager.entries["T1"]["x6"].written_values[2], 999)

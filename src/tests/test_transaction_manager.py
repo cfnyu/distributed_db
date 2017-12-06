@@ -141,12 +141,9 @@ class TransactionManagerTestCase(unittest.TestCase):
 
     def test_execute_write_transaction(self):
         """ Given a Write instruction, write transaction will be called """
-        # TODO: Re-write function once write function has been written
-
+        
         instruction = Instruction("W(T1,x3,33)")
-        result = self.transaction_manager.execute(instruction)
-
-        self.assertEquals(result, "Write the value of a Variable")
+        self.assertRaises(ValueError, self.transaction_manager.execute, instruction)
 
 @contextmanager
 def std_out():

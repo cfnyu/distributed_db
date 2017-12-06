@@ -13,7 +13,7 @@ class LockType(Enum):
 
 class Lock:
     """ Represents a single Lock object """
-    
+
     def __init__(self, lock_type, transaction, variable):
         self.lock_type = lock_type
         self.transaction = transaction
