@@ -144,9 +144,8 @@ class TransactionManager:
                     #Check if locks can be obtained on all available sites
                     locks_obtained_all_sites = True
                     for site in stable_sites:
-                        lock_obtained_status = site.data_manager.obtain_write_lock(instruction, transaction)
+                        lock_obtained_status = self.sites[site.identifer].data_manager.obtain_write_lock(instruction, transaction)
                         locks_obtained_all_sites = locks_obtained_all_sites and lock_obtained_status
-                        self.sites[site.identifer] = site
 
                     if not locks_obtained_all_sites: 
                         #Cannot write, block transaction
@@ -161,9 +160,8 @@ class TransactionManager:
                             self.transactions[transaction_ident] = transaction
                         else:
                             for site in stable_sites:
-                                site.data_manager.write_new_data(self.clock.time, instruction.variable_identifier, instruction.value)
-                                #TODO: log that write successful
-                                self.sites[site.identifer] = site
+                                self.sites[site.identifer].data_manager.write_new_data(self.clock.time, instruction.variable_identifier, instruction.value)
+                                #TODO: log/print that write successful provided commit happens
                             
                             #add the sites the value was written to by the transaction in a dictionary
                             #This will be used to abort the transaction when any of the stable_sites fail
