@@ -92,13 +92,35 @@ class TransactionManager:
 
         self.transactions[trans_ident] = transaction
 
-    def end_transaction(self, transaction):
+    def end_transaction(self, instruction):
         """ End a Transaction """
+        transaction = self.transactions[instruction.transaction_identifier]
 
-        # if transaction.transaction_type == TransactionType.READ_ONLY:
-        #     for site in self.sites_transactions_accessed_log[transaction_ident]:
-        #         if 
-        return "End a Transaction"
+        if transaction.transaction_type == TransactionType.READ_ONLY:
+            # If a site is down add this task to the waiting transactions
+            for site in self.sites_transactions_accessed_log[transaction.identifier]:
+                if site.status != SiteStatus.UP:
+                    # TODO: Confirm that this cannot occur with the professor
+                    raise ArithmeticError("You are trying to end a transaction before recovering a site that went down")
+
+        can_commit = False
+        for site_id, access_time in self.sites_transactions_accessed_log[transaction.identifier].iteritems():
+            site = self.sites[site_id]
+
+            can_commit = (site.status == SiteStatus.UP and site.create_time == access_time)
+
+            if not can_commit:
+                break
+
+        transaction.end_time = self.clock.time
+        if transaction.transaction_type == TransactionType.READ_ONLY or can_commit:
+            for site_id, access_time in self.sites_transactions_accessed_log[transaction.identifier].iteritems():
+                site = self.sites[site_id]
+                site.data_manager.commit(self.clock.time, transaction, instruction)
+                site.data_manager.clear_locks(transaction, instruction)
+
+            self.sites_transactions_accessed_log.pop(transaction.identifier, None)
+            self.transactions.pop(transaction.identifier, None)
 
     def get(self, instruction):
         """ Get a Transaction """
@@ -140,6 +162,11 @@ class TransactionManager:
                     else:
                         if site.data_manager.obtain_read_lock(transaction, instruction):
                             value = site.data_manager.read(transaction, instruction)
+                            if transaction.identifier not in self.sites_transactions_accessed_log:
+                                self.sites_transactions_accessed_log[transaction.identifier] = {}
+
+                            self.sites_transactions_accessed_log[transaction.identifier][site_id] = self.clock.time
+
                             print "%s: %s at site %s" % \
                                 (instruction.variable_identifier, str(value), str(site_id))
 
@@ -156,7 +183,7 @@ class TransactionManager:
         if transaction:
             if transaction.state == TransactionState.ABORTED:
                 #TODO: log that transaction was aborted, couldn't write
-                return 
+                return
             else:
                 stable_sites = []
                 sites_with_variable = self.variables_to_site_map[instruction.variable_identifier]
@@ -167,23 +194,26 @@ class TransactionManager:
                     if site.status == SiteStatus.UP:
                         stable_sites.append(site)
                 
-                if len(stable_sites) == 0:  #No available site
+                site_count = len(stable_sites)
+                if site_count == 0:  #No available site
                     transaction.state = TransactionState.WAITING
                     self.transactions[transaction_ident] = transaction
                     self.waiting_transactions_instructions_map[transaction_ident] = instruction
                 else:
-                    #check if this instruction was in waiting map
+                    # Check if this instruction was in waiting map
                     if transaction_ident in self.waiting_transactions_instructions_map:
                         del self.waiting_transactions_instructions_map[transaction_ident]
                         transaction.state = TransactionState.RUNNING
                         self.transactions[transaction_ident] = transaction
-                    
+
                     is_transaction_blocked = False
                     for site in stable_sites:
-                        #this checks if lock can be obtained on the available site, 
-                        # if lock can be obtained None is returned, and if not, returns the blocking transaction identifier
+                        # This checks if lock can be obtained on the available site,
+                        # If lock can be obtained None is returned, and if not, 
+                        # Returns the blocking transaction identifier
+
                         blocked_transaction_id = self.sites[site.identifer].data_manager.obtain_write_lock(instruction, transaction)
-                        #if transaction is blocked, then append in the blocked instructions table and then break
+                        # If transaction is blocked, then append in the blocked instructions table and then break
                         if blocked_transaction_id:
                             if blocked_transaction_id not in self.blocked_transactions_instructions_map:
                                 self.blocked_transactions_instructions_map[blocked_transaction_id] = instruction
@@ -208,17 +238,23 @@ class TransactionManager:
 
                         #do the actual updating here       
                         for site in stable_sites:
-                            self.sites[site.identifer].data_manager.write_new_data(
-                                self.clock.time, instruction.variable_identifier, instruction.value, instruction.transaction_identifier)
-                            #TODO: log/print that write successful provided commit happens
-                            
-                        #add the sites the value was written to by the transaction in a dictionary
-                        #This will be used to abort the transaction when any of the stable_sites fail
-                        if transaction_ident not in self.sites_transactions_accessed_log:
-                            self.sites_transactions_accessed_log[transaction_ident] = set(stable_sites)
-                        else:
-                            sites_set = self.sites_transactions_accessed_log[transaction_ident]
-                            self.sites_transactions_accessed_log[transaction_ident] = sites_set.union(set(stable_sites))
+                            if instruction.variable_identifier in self.sites[site.identifer].variables:
+                                self.sites[site.identifer].data_manager.write_new_data( \
+                                    self.clock.time, instruction.variable_identifier, \
+                                    instruction.value, instruction.transaction_identifier)
+
+                                #TODO: log/print that write successful provided commit happens
+                                
+                                #add the sites the value was written to by the transaction in a dictionary
+                                #This will be used to abort the transaction when any of the stable_sites fail
+                                if transaction_ident not in self.sites_transactions_accessed_log:
+                                    self.sites_transactions_accessed_log[transaction_ident] = {}
+                                
+                                self.sites_transactions_accessed_log[transaction_ident][site.identifer] = self.clock.time
+                                #     set(stable_sites)
+                                # else:
+                                #     sites_set = self.sites_transactions_accessed_log[transaction_ident]
+                                #     self.sites_transactions_accessed_log[transaction_ident] = sites_set.union(set(stable_sites))
 
     def dump(self, instruction):
         """ Prints out variable values to stdout """

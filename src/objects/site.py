@@ -20,6 +20,7 @@ class Site:
         self.identifer = site_id
         self.data_manager = DataManager()
         self.status = SiteStatus.UP
+        self.create_time = 0
 
         # Load all variables
         for i in range(1, 21):

@@ -36,9 +36,12 @@ class DataManager:
 
     def write_new_data(self, time, variable_ident, new_value, trans_identifier):
         """ Method to write the new value of the variable. This will go into the log """
-        #update the new value of the variable
-        self.variables[variable_ident].value = new_value
-        self.log(self.variables[variable_ident], time, trans_identifier)
+        
+        # TODO: Write a unit test to test a write when the site doesn't have that variable
+        if variable_ident: 
+            #update the new value of the variable
+            self.variables[variable_ident].value = new_value
+            self.log(self.variables[variable_ident], time, trans_identifier)
 
     def get_variable_value(self, identifier):
         """ Returns the last known committed value for this variable """
@@ -120,7 +123,8 @@ class DataManager:
         if instruction.variable_identifier in self.locks:
             for lock in self.locks[instruction.variable_identifier]:
                 if lock.lock_type == LockType.WRITE and lock.transaction.index == transaction.index:
-                    return lock.variable.value
+                    return sorted(self.entries[transaction.identifier][instruction.variable_identifier], reverse=True)[0]
+                    # return lock.variable.value
 
     def read(self, transaction, instruction):
         """ Gets the lated valued for this transaction """
@@ -133,3 +137,19 @@ class DataManager:
             return variable.last_committed_value
 
         return write_value
+
+    def commit(self, time, transaction):
+        """ Commit variables """
+
+        for variable_identifier, variable in self.entries[transaction.identifier].iteritems():
+            for lock in self.locks[variable_identifier]:
+                if lock.lock_type == LockType.WRITE:
+                    newest_value = variable.get_last_committed_value()
+                    self.variables[variable_identifier].update(time, newest_value)
+
+    def clear_locks(self, transaction, instruction):
+        """ Clear all locks """
+
+        for lock in self.locks[instruction.variable_identifier]:
+            if lock.transaction.identifier == transaction.identifier:
+                self.locks[instruction.variable_identifier].remove(lock)
