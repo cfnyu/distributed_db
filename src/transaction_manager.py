@@ -134,9 +134,32 @@ class TransactionManager:
         if blocked_instructions_list:
             self.rerun(blocked_instructions_list)
 
-    def abort(self, instruction):
+    def abort(self, transaction_ident, site_index=None):
         """ Abort a Transaction """
-        return "Abort a Transaction"
+        self.transactions[transaction_ident].state = TransactionState.ABORTED
+        self.transactions[transaction_ident].end_time = self.clock.time
+
+        if transaction_ident in self.sites_transactions_accessed_log:
+            for site in self.sites_transactions_accessed_log[transaction_ident]:
+                self.sites[site.identifer].data_manager.clear_locks(transaction_ident)
+                self.sites[site.identifer].data_manager.clear_entries(transaction_ident)
+            del self.sites_transactions_accessed_log[transaction_ident]
+
+        if transaction_ident in self.waiting_transactions_instructions_map:
+            del self.waiting_transactions_instructions_map[transaction_ident]
+
+        blocked_instructions_list = []
+        if transaction_ident in self.blocked_transactions_instructions_map:
+            blocked_instructions_list = self.blocked_transactions_instructions_map[transaction_ident]
+            del self.blocked_transactions_instructions_map[transaction_ident]
+        
+        if site_index:
+            print "Transaction " + str(transaction_ident) + " was aborted because it performed read or write operation on failed site " + str(site_index) + "."
+        else:
+            print "Transaction " + str(transaction_ident) + " was aborted because deadlock was detected."
+
+        if blocked_instructions_list:
+            self.rerun(blocked_instructions_list)
 
     def rerun(self, instructions=None):
         # Change status of transaction to Running from Block
@@ -299,9 +322,9 @@ class TransactionManager:
                     if site.identifer == site_index:
                         transactions_to_abort.append(trans_ident)
         
-        #if transactions_to_abort:
-           # for trans_id in transactions_to_abort:
-               # self.abort_transaction(trans_id, site_index)
+        if transactions_to_abort:
+            for trans_id in transactions_to_abort:
+                self.abort(trans_id, site_index)
 
     def recover(self, instruction):
         return "recover"

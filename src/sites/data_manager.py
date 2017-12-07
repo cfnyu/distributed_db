@@ -157,3 +157,9 @@ class DataManager:
                 for lock in lock_list:
                     if lock.transaction.identifier == transaction_ident:
                         self.locks[variable_ident].remove(lock)
+    
+    def clear_entries(self, transaction_ident):
+        """Clear the entries for the transaction_ident"""
+        if self.entries:
+            if transaction_ident in self.entries:
+                del self.entries[transaction_ident]
