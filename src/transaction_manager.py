@@ -115,8 +115,8 @@ class TransactionManager:
         if transaction.transaction_type == TransactionType.READ_ONLY or can_commit:
             for site_id, access_time in self.sites_transactions_accessed_log[transaction.identifier].iteritems():
                 site = self.sites[site_id]
-                site.data_manager.commit(self.clock.time, transaction, instruction)
-                site.data_manager.clear_locks(transaction, instruction)
+                site.data_manager.commit(self.clock.time, transaction)
+                site.data_manager.clear_locks(transaction)
 
             self.sites_transactions_accessed_log.pop(transaction.identifier, None)
             self.transactions.pop(transaction.identifier, None)
