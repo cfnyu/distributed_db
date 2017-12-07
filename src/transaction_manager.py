@@ -46,6 +46,7 @@ class TransactionManager:
 
         """
         self.clock.tick()
+        self.logger.log("At clock tick : " + str(self.clock.time))
         self.rerun()
 
         if instruction.instruction_type == InstructionType.BEGIN or \
@@ -88,20 +89,20 @@ class TransactionManager:
 
             for site_identifier, site in self.sites.iteritems():
                 if site.status == SiteStatus.UP:
-                    for variable in site.data_manager.variables:
+                    for variable_id in site.data_manager.variables:
                         if site_identifier not in self.readonly_snapshots[trans_ident]:
                             self.readonly_snapshots[trans_ident][site_identifier] = []
-                        self.readonly_snapshots[trans_ident][site_identifier].append(variable)
+                        self.readonly_snapshots[trans_ident][site_identifier].append(site.data_manager.variables[variable_id])
 
         self.transactions[trans_ident] = transaction
 
     def end_transaction(self, transaction):
         """ End a Transaction """
-        
+
         self.logger.log("Attempting to end transaction %s" % transaction.identifier)
 
         if transaction.state == TransactionState.ABORTED:
-            self.logger.log("Transaction %s has already aborted" % transaction.identifier)
+            self.logger.log("Transaction %s cannot be ended because it has already aborted" % transaction.identifier)
             return False
 
         if transaction.transaction_type == TransactionType.READ_ONLY:
@@ -116,10 +117,10 @@ class TransactionManager:
 
         if transaction.identifier in self.sites_transactions_accessed_log:
             del self.sites_transactions_accessed_log[transaction.identifier]
-        
+
     def commit(self, transaction):
         """ Commit a Transaction """
-        
+
         self.transactions[transaction.identifier].end_time = self.clock.time
         self.transactions[transaction.identifier].state = TransactionState.COMMITTED
 
@@ -128,8 +129,8 @@ class TransactionManager:
             for site in self.sites_transactions_accessed_log[transaction.identifier]:
                 if self.sites[site.identifer].status == SiteStatus.UP:
                     self.sites[site.identifer].data_manager.commit(self.clock.time, transaction)
-        
-        output = "Transaction %s committed successfully" % transaction.identifier
+
+        output = "RW Transaction %s committed successfully" % transaction.identifier
         print output
         self.logger.log(output)
 
@@ -144,7 +145,7 @@ class TransactionManager:
 
     def abort(self, transaction_ident, site_index=None):
         """ Abort a Transaction """
-        
+
         self.logger.log("Attempting to abort transaction %s" % transaction_ident)
 
         self.transactions[transaction_ident].state = TransactionState.ABORTED
@@ -163,31 +164,42 @@ class TransactionManager:
         if transaction_ident in self.blocked_transactions_instructions_map:
             blocked_instructions_list = self.blocked_transactions_instructions_map[transaction_ident]
             del self.blocked_transactions_instructions_map[transaction_ident]
-        
+
         if site_index:
             self.logger.log("Transaction %s was aborted because it performed read or write operation on failed site %s." % \
                             (transaction_ident, str(site_index)))
+            print "Transaction %s was aborted because it performed read or write operation on failed site %s." % \
+                (transaction_ident, str(site_index))
         else:
             self.logger.log("Transaction %s was aborted because deadlock was detected." % transaction_ident)
+            print "Transaction %s was aborted because deadlock was detected." % transaction_ident
 
         if blocked_instructions_list:
             self.rerun(blocked_instructions_list)
 
     def rerun(self, instructions=None):
         """ Rerun waiting/blocked transactions """
-        
+
         self.logger.log("Attempting to rerun Waiting/Blocked transactions")
 
-        for transaction_ident, instruction in self.waiting_transactions_instructions_map.iteritems():
-            del self.waiting_transactions_instructions_map[transaction_ident]
-            self.transactions[transaction_ident].state = TransactionState.RUNNING
-            self.execute(instruction)
+        if len(self.waiting_transactions_instructions_map) == 0:
+            self.logger.log("No waiting transaction to rerun.")
+        else:
+            for transaction_ident, instruction in self.waiting_transactions_instructions_map.iteritems():
+                del self.waiting_transactions_instructions_map[transaction_ident]
+                self.logger.log("Rerunning transaction: " + transaction_ident)
+                self.transactions[transaction_ident].state = TransactionState.RUNNING
+                self.execute(instruction)
 
         if instructions:
             for instruction in instructions:
-                self.transactions[instruction.transaction_identifier].state = TransactionState.RUNNING
-                self.execute(instruction)
-        
+                if(self.transactions[instruction.transaction_identifier].state != TransactionState.ABORTED):
+                    self.logger.log("Rerunning transaction: " + instruction.transaction_identifier)
+                    self.transactions[instruction.transaction_identifier].state = TransactionState.RUNNING
+                    self.execute(instruction)
+                else:
+                    self.logger.log("Couldn't rerun transaction: " + instruction.transaction_identifier + " because it was aborted.")
+
     def read(self, instruction):
         """ Read the value of a Variable """
 
@@ -196,6 +208,10 @@ class TransactionManager:
                              instruction.transaction_identifier)
 
         transaction = self.transactions[instruction.transaction_identifier]
+        if transaction.state == TransactionState.ABORTED:
+            self.logger.log("Read rejected, Transaction %s was already aborted" %
+                            transaction.identifier)
+            return
         possible_sites_ids = self.variables_to_site_map[instruction.variable_identifier]
         possible_sites = len(possible_sites_ids)
         obtained_lock = False
@@ -211,6 +227,10 @@ class TransactionManager:
                 if site.status == SiteStatus.UP:
                     if transaction.transaction_type == TransactionType.READ_ONLY:
                         if site_id in self.readonly_snapshots[transaction.identifier]:
+                            for variable in self.readonly_snapshots[transaction.identifier][site_id]:
+                                if variable.identifier == instruction.variable_identifier:
+                                    print "%s: Read %s - value %s at site %s" % (instruction.transaction_identifier, instruction.variable_identifier, str(variable.value), str(site_id))
+                                    
                             return self.readonly_snapshots[transaction.identifier][site_id]
                     else:
                         obtained_lock = site.data_manager.obtain_read_lock(transaction, instruction)
@@ -228,7 +248,7 @@ class TransactionManager:
 
                         if transaction.identifier not in self.sites_transactions_accessed_log:
                             self.sites_transactions_accessed_log[transaction.identifier] = set()
-                    
+
                         self.sites_transactions_accessed_log[transaction.identifier].add(site)
 
                         if not first_available_site_id:
@@ -237,7 +257,9 @@ class TransactionManager:
             if obtained_lock:
                 value = self.sites[first_available_site_id].data_manager.read(transaction, instruction)
 
-                print "Read %s: %s at site %s" % (instruction.variable_identifier, str(value), str(first_available_site_id))
+                print "%s: Read %s - value %s at site %s" % (instruction.transaction_identifier, instruction.variable_identifier, str(value), str(first_available_site_id))
+            else:
+                self.check_for_deadlock()
 
     def write(self, instruction):
         """ Write the value of a Variable """
@@ -264,7 +286,7 @@ class TransactionManager:
 
             site_count = len(stable_sites)
             if site_count == 0:  #No available site
-                self.logger.log("No available sties found, Transaction %s has been added to the wait queue" % \
+                self.logger.log("No available sites found, Transaction %s has been added to the wait queue" % \
                                 transaction_ident)
                 transaction.state = TransactionState.WAITING
                 self.transactions[transaction_ident] = transaction
@@ -273,7 +295,7 @@ class TransactionManager:
                 is_transaction_blocked = False
                 for site in stable_sites:
                     # This checks if lock can be obtained on the available site,
-                    # If lock can be obtained None is returned, and if not, 
+                    # If lock can be obtained None is returned, and if not,
                     # Returns the blocking transaction identifier
 
                     blocked_transaction_id = self.sites[site.identifer].data_manager.obtain_write_lock(instruction, transaction)
@@ -291,8 +313,9 @@ class TransactionManager:
 
                 if is_transaction_blocked:
                     self.transactions[transaction_ident].state = TransactionState.BLOCKED
-                    # TODO: Check For Dead-locks
-                else:                        
+                    #check for deadlock
+                    self.check_for_deadlock()
+                else:
                     for site in stable_sites:
                         self.sites[site.identifer].data_manager.write_new_data( \
                             self.clock.time, instruction.variable_identifier, \
@@ -328,8 +351,8 @@ class TransactionManager:
         pprint.pprint(results)
 
     def fail(self, instruction):
-        """Fails the site and aborts transaction that accessed 
-        (performed read or write operation) the site 
+        """Fails the site and aborts transaction that accessed
+        (performed read or write operation) the site
         """
 
         self.logger.log("Failing site %s" % str(instruction.site_identifier))
@@ -358,3 +381,85 @@ class TransactionManager:
 
         site_index = instruction.site_identifier
         self.sites[site_index].recover(self.clock.time)
+
+        self.logger.log("Site " + str(site_index) + " has recovered.")
+
+    def check_for_deadlock(self):
+        """Check for deadlock and abort the youngest transaction"""
+        self.logger.log("Checking for deadlock.")
+
+        active_transactions_list = []
+        for trans_id in self.transactions:
+            if self.transactions[trans_id].state != TransactionState.ABORTED and \
+                self.transactions[trans_id].state != TransactionState.COMMITTED:
+                active_transactions_list.append(self.transactions[trans_id])
+
+        #create a transaction_graph
+        transaction_graph = self.create_graph(active_transactions_list)
+        self.logger.log("Transaction graph: " + str(transaction_graph))
+
+        #check for cycles in the transaction_graph
+        visited_set = set()
+        done_set = set()
+        has_cycle = False
+
+        for vertex in transaction_graph:
+            if vertex not in visited_set and not has_cycle:
+                has_cycle = self.dfs_check_cycle(vertex, transaction_graph, visited_set, done_set)
+
+        if not has_cycle:
+            self.logger.log("Cycle not detected, no deadlock.")
+        else:
+            self.logger.log("Cycle detected, there is a deadlock.")
+            transaction_id_to_abort = self.get_transaction_id_to_kill(visited_set)
+            self.logger.log("Youngest transaction id: " + transaction_id_to_abort + ". Will be aborted.")
+            self.abort(transaction_id_to_abort)
+
+
+    def create_graph(self, active_transactions_list):
+        """ Create a transaction graph
+        This should create a graph of {transaction1: [list of transactions that transaction1 is waiting to finish ]}
+        """
+        transaction_graph = {}
+
+        if active_transactions_list:
+            #locked_variables_to_transactions_map = get_locked_variables_to_transactions_map(sites)
+            for active_transaction in active_transactions_list:
+                transaction_graph[active_transaction.identifier] = []
+
+                #check if transaction is blocked
+                if active_transaction.state == TransactionState.BLOCKED:
+                    blocked_trans_set = set()
+                    #get the blocked_instruction from the list value of blocked_transactions_instructions_map
+                    for blocking_trans_id, blocked_instructions_list in self.blocked_transactions_instructions_map.iteritems():
+                        for blocked_instruction in blocked_instructions_list:
+                            if blocked_instruction.transaction_identifier == active_transaction.identifier:
+                                #if the transaction in blocked instruction list is equal to the current blocked transaction
+                                #get the transaction that is blocking it
+                                blocked_trans_set.add(blocking_trans_id)
+                    transaction_graph[active_transaction.identifier] = list(blocked_trans_set)
+
+        return transaction_graph
+
+    def dfs_check_cycle(self, vertex, graph, visited_set, done_set):
+        visited_set.add(vertex)
+        if vertex in graph:
+            for neighbour in graph[vertex]:
+                if neighbour not in visited_set and neighbour not in done_set:
+                    self.dfs_check_cycle(neighbour, graph, visited_set, done_set)
+
+                if neighbour in visited_set and neighbour not in done_set:
+                    return True
+        done_set.add(vertex)
+        return False
+
+    def get_transaction_id_to_kill(self, visited_set):
+        max_start_time = -1
+        max_trans_ident = ""
+        if visited_set:
+            for trans_id in visited_set:
+                if self.transactions[trans_id].start_time > max_start_time:
+                    max_start_time = self.transactions[trans_id].start_time
+                    max_trans_ident = trans_id
+
+        return max_trans_ident
