@@ -118,7 +118,13 @@ class DataManager:
             for lock in self.locks[instruction.variable_identifier]:
                 if lock.lock_type == LockType.WRITE and lock.transaction.index == transaction.index:
                     return self.entries[transaction.identifier][instruction.variable_identifier].get_last_committed_value()
-                    # return lock.variable.value
+
+    def get_write_lock_owner(self, instruction):
+        if self.locks:
+            for lock in self.locks[instruction.variable_identifier]:
+                if lock.lock_type == LockType.WRITE:
+                    return lock.transaction.identifier
+        return None
 
     def read(self, transaction, instruction):
         """ Gets the lated valued for this transaction """

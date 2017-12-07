@@ -137,6 +137,13 @@ class TransactionManager:
         return "Abort a Transaction"
 
     def rerun(self, instructions=None):
+        # Change status of transaction to Running from Block
+        # Check if this instruction was in waiting map
+        # Loop through all transactions
+        # if transaction_ident in self.waiting_transactions_instructions_map:
+        #     del self.waiting_transactions_instructions_map[transaction_ident]
+        #     transaction.state = TransactionState.RUNNING
+        #     self.transactions[transaction_ident] = transaction
         pass
 
     def read(self, instruction):
@@ -149,10 +156,13 @@ class TransactionManager:
         transaction = self.transactions[instruction.transaction_identifier]
         possible_sites_ids = self.variables_to_site_map[instruction.variable_identifier]
         possible_sites = len(possible_sites_ids)
+        obtained_lock = False
+        first_available_site_id = None
 
         if possible_sites == 0:
-            # TODO: Store transaction in the waiting bucket
-            pass
+            transaction.state = TransactionState.WAITING
+            self.transactions[transaction.identifier] = transaction
+            self.waiting_transactions_instructions_map[transaction.identifier] = instruction
         else:
             for site_id in possible_sites_ids:
                 site = self.sites[site_id]
@@ -161,17 +171,31 @@ class TransactionManager:
                         if site_id in self.readonly_snapshots[transaction.identifier]:
                             return self.readonly_snapshots[transaction.identifier][site_id]
                     else:
-                        if site.data_manager.obtain_read_lock(transaction, instruction):
-                            value = site.data_manager.read(transaction, instruction)
-                            if transaction.identifier not in self.sites_transactions_accessed_log:
-                                self.sites_transactions_accessed_log[transaction.identifier] = {}
+                        obtained_lock = site.data_manager.obtain_read_lock(transaction, instruction)
+                        if not obtained_lock:
+                            transaction_lock_owner = site.data_manager.get_write_lock_owner(instruction)
 
-                            self.sites_transactions_accessed_log[transaction.identifier][site_id] = self.clock.time
+                            # If transaction is blocked, then append in the blocked instructions table and then break
+                            if transaction_lock_owner:
+                                if transaction_lock_owner not in self.blocked_transactions_instructions_map:
+                                    self.blocked_transactions_instructions_map[transaction_lock_owner] = instruction
+                                else:
+                                    self.blocked_transactions_instructions_map[transaction_lock_owner].append(instruction)
+                                self.transactions[transaction.identifier].state == TransactionState.BLOCKED
+                            break
 
-                            print "%s: %s at site %s" % \
-                                (instruction.variable_identifier, str(value), str(site_id))
+                        if transaction.identifier not in self.sites_transactions_accessed_log:
+                            self.sites_transactions_accessed_log[transaction.identifier] = set()
+                        else:
+                            self.sites_transactions_accessed_log[transaction.identifier].add(site)
 
-        return "Read the value of a Variable"
+                        if not first_available_site_id:
+                            first_available_site_id = site_id
+
+            if obtained_lock:
+                value = self.sites[first_available_site_id].data_manager.read(transaction, instruction)
+
+                print "%s: %s at site %s" % (instruction.variable_identifier, str(value), str(first_available_site_id))
 
     def write(self, instruction):
         """ Write the value of a Variable """
@@ -201,12 +225,6 @@ class TransactionManager:
                     self.transactions[transaction_ident] = transaction
                     self.waiting_transactions_instructions_map[transaction_ident] = instruction
                 else:
-                    # Check if this instruction was in waiting map
-                    if transaction_ident in self.waiting_transactions_instructions_map:
-                        del self.waiting_transactions_instructions_map[transaction_ident]
-                        transaction.state = TransactionState.RUNNING
-                        self.transactions[transaction_ident] = transaction
-
                     is_transaction_blocked = False
                     for site in stable_sites:
                         # This checks if lock can be obtained on the available site,
@@ -227,16 +245,7 @@ class TransactionManager:
                         transaction.state = TransactionState.BLOCKED
                         self.transactions[transaction_ident] = transaction
                         #checkForDeadlock
-                    else:
-                        #remove instruction from blocked_transaction_instructions_map if present
-                        for blocked_transaction_id in self.blocked_transactions_instructions_map:
-                            if instruction in self.blocked_transactions_instructions_map[blocked_transaction_id]:
-                                self.blocked_transactions_instructions_map[blocked_transaction_id].remove(instruction)
-                        
-                        if transaction.state != TransactionState.RUNNING:
-                            transaction.state = TransactionState.RUNNING
-                            self.transactions[transaction_ident] = transaction
-
+                    else:                        
                         #do the actual updating here       
                         for site in stable_sites:
                             self.sites[site.identifer].data_manager.write_new_data( \
@@ -277,5 +286,4 @@ class TransactionManager:
 
     def recover(self, instruction):
         return "recover"
-
 
