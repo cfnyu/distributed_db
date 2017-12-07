@@ -28,6 +28,6 @@ class Transaction:
         self.transaction_type = transaction_type
         self.start_time = start_time
         self.end_time = None
-        self.state = TransactionState.WAITING
+        self.state = TransactionState.RUNNING
         # Wait time?
         # Buffer

@@ -35,3 +35,18 @@ class EndTransactionOperationTestCase(unittest.TestCase):
                 self.assertTrue(lock.lock_type == LockType.READ)
                 self.assertTrue(lock.transaction.identifier == "T1")
 
+        transaction = self.trans_manager.transactions["T1"]
+        self.trans_manager.end_transaction(transaction)
+
+@contextmanager
+def std_out():
+    """ Capture stdout """
+
+    new_out, new_err = StringIO(), StringIO()
+    old_out, old_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_out, new_err
+        yield sys.stdout, sys.stderr
+    finally:
+        sys.stdout, sys.stderr = old_out, old_err
+

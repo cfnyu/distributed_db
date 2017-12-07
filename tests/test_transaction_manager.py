@@ -28,7 +28,7 @@ class TransactionManagerTestCase(unittest.TestCase):
         self.assertEquals(trans1.transaction_type, TransactionType.READ_WRITE)
         self.assertEquals(trans1.start_time, 1)
         self.assertIsNone(trans1.end_time)
-        self.assertEquals(trans1.state, TransactionState.WAITING)
+        self.assertEquals(trans1.state, TransactionState.RUNNING)
 
     def test_execute_begin_ro_transaction(self):
         """ Testing a Read Only Begin transaction statement """
@@ -44,7 +44,7 @@ class TransactionManagerTestCase(unittest.TestCase):
         self.assertEquals(trans1.transaction_type, TransactionType.READ_ONLY)
         self.assertEquals(trans1.start_time, 1)
         self.assertIsNone(trans1.end_time)
-        self.assertEquals(trans1.state, TransactionState.WAITING)
+        self.assertEquals(trans1.state, TransactionState.RUNNING)
 
     def test_begin_ro_transaction_snapshot(self):
         """ Testing that a snapshot holds the correct values """

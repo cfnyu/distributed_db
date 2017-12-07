@@ -92,9 +92,8 @@ class TransactionManager:
 
         self.transactions[trans_ident] = transaction
 
-    def end_transaction(self, instruction):
+    def end_transaction(self, transaction):
         """ End a Transaction """
-        transaction = self.transactions[instruction.transaction_identifier]
 
         if transaction.transaction_type == TransactionType.READ_ONLY:
             # If a site is down add this task to the waiting transactions
