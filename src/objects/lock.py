@@ -18,3 +18,7 @@ class Lock:
         self.lock_type = lock_type
         self.transaction = transaction
         self.variable = variable
+
+    def __repr__(self):
+        return "{ Type: %s, Transaction: %s, Variable: %s }" % \
+               (str(self.lock_type), self.transaction.identifier, self.variable.identifier)

@@ -112,34 +112,6 @@ class TransactionManagerTestCase(unittest.TestCase):
         output = out.getvalue().strip()
         self.assertEqual(output, "{'x14': { x14: 140 }, 'x18': { x18: 180 }, 'x10': { x10: 100 }, 'x8': { x8: 80 }, 'x16': { x16: 160 }, 'x2': { x2: 20 }, 'x12': { x12: 120 }, 'x6': { x6: 60 }, 'x20': { x20: 200 }, 'x4': { x4: 40 }}")
 
-    def test_execute_fail_transaction(self):
-        """ Given a Fail instruction, fail method will be called """
-        # TODO: Re-write function once fail function has been written
-
-        instruction = Instruction("fail(1)")
-        result = self.transaction_manager.execute(instruction)
-
-        self.assertEquals(result, "fail")
-
-    def test_execute_recover_transaction(self):
-        """ Given a Recover instruction, recover transaction will be called """
-        # TODO: Re-write function once recover function has been written
-
-        instruction = Instruction("recover(1)")
-        result = self.transaction_manager.execute(instruction)
-
-        self.assertEquals(result, "recover")
-
-    @unittest.skip("Needs to be refactored now that Write has been implemented")
-    def test_execute_write_transaction(self):
-        """ Given a Write instruction, write transaction will be called """
-        # TODO: Re-write function once write function has been written
-
-        instruction = Instruction("W(T1,x3,33)")
-        result = self.transaction_manager.execute(instruction)
-
-        self.assertEquals(result, "Write the value of a Variable")
-
 @contextmanager
 def std_out():
     """ Capture stdout """

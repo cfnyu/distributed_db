@@ -36,9 +36,14 @@ class Site:
 
         return self.data_manager.variables
 
-    def recover(self):
+    def recover(self, time):
         """ Recover this site """
-        pass
+
+        self.status = SiteStatus.UP
+        self.create_time = time
+
+        for variable in self.data_manager.variables.values():
+            variable.readable = not variable.replicated
 
     def fail(self):
         """ Fail this site """

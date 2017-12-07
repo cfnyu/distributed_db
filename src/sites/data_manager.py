@@ -54,7 +54,7 @@ class DataManager:
         """ Obtain the Write Lock for a Transaction """
 
         lock_type = LockType.WRITE
-
+        
         #get the variable from the variable identifier
         variable_ident = instruction.variable_identifier
         variable = self.variables[variable_ident]
