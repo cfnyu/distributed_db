@@ -5,54 +5,51 @@ This module represents the Data Manager, which manages all
 Site specific data
 
 """
+import copy
 from objects.lock import Lock, LockType
 from objects.transaction import TransactionType
+from src.objects.variable import Variable
 
 class DataManager:
     """ Maintains all data for a particular site """
 
-    def __init__(self):
+    def __init__(self, variables):
         self.entries = {}
-        self.variables = {}
+        self.variables = variables
         self.up_time = 0
         self.locks = {}
 
-    def log(self, variable, time, trans_identifier):
-        """ Log all variable changes. """
-
-        if variable.identifier not in self.entries:
-            self.entries[variable.identifier] = {}
-
-        # The assumption here is 'Time' is a unique number
-        self.entries[variable.identifier][time] = (variable, trans_identifier)
-
-    def add_variable(self, time, variable):
-        """ Method to add a new variable that will be managed by this DM """
-
-        self.variables[variable.identifier] = variable
-
-        # Starting initial variable value
-        self.log(variable, time, "T")
-
     def write_new_data(self, time, variable_ident, new_value, trans_identifier):
         """ Method to write the new value of the variable. This will go into the log """
-        #update the new value of the variable
-        self.variables[variable_ident].value = new_value
-        self.log(self.variables[variable_ident], time, trans_identifier)
+
+        # TODO: Write a unit test to test a write when the site doesn't have that variable
+        if variable_ident: 
+            if trans_identifier not in self.entries:
+                self.entries[trans_identifier] = {}
+
+            if variable_ident not in self.entries[trans_identifier]:
+                # update the new value of the variable
+
+                new_variable = copy.copy(self.variables[variable_ident])
+                new_variable.update_value(time, new_value)
+
+                self.entries[trans_identifier][variable_ident] = new_variable
+            else:
+                self.entries[trans_identifier][variable_ident].update(time, new_value)
 
     def get_variable_value(self, identifier):
         """ Returns the last known committed value for this variable """
 
         return self.variables[identifier].value
 
-    def get_variable_at_time(self, variable, time):
+    def get_value_at_time(self, variable, time, transaction):
         """ Returns the last known committed value for this variable """
 
-        if variable in self.entries:
-            if not time in self.entries[variable]:
-                return self.get_variable_at_time(variable, time-1)
+        if transaction.trans_identifier in self.entries:
+            if not time in self.entries[transaction.trans_identifier]:
+                return self.get_value_at_time(variable, time-1, transaction)
             else:
-                return self.entries[variable][time][0].value
+                return self.entries[transaction.trans_identifier][time].value
 
     def obtain_write_lock(self, instruction, transaction):
         """ Obtain the Write Lock for a Transaction """
@@ -64,15 +61,15 @@ class DataManager:
         variable = self.variables[variable_ident]
 
         #Check if there are locks already for that variable
-        if variable_ident not in self.locks: 
+        if variable_ident not in self.locks:
             self.locks[variable_ident] = []
             lock = Lock(lock_type, transaction, variable)
             self.locks[variable_ident].append(lock)
-            #TODO: log lock acquired 
+            #TODO: log lock acquired
             return None
         else:
             lock_list = self.locks[variable_ident]
-            
+
             #If any transaction has a lock on the variable, this transaction cannot obtain a lock
             for lock in lock_list:
                 if lock.transaction.identifier != transaction.identifier:
@@ -120,7 +117,14 @@ class DataManager:
         if instruction.variable_identifier in self.locks:
             for lock in self.locks[instruction.variable_identifier]:
                 if lock.lock_type == LockType.WRITE and lock.transaction.index == transaction.index:
-                    return lock.variable.value
+                    return self.entries[transaction.identifier][instruction.variable_identifier].get_last_committed_value()
+
+    def get_write_lock_owner(self, instruction):
+        if self.locks:
+            for lock in self.locks[instruction.variable_identifier]:
+                if lock.lock_type == LockType.WRITE:
+                    return lock.transaction.identifier
+        return None
 
     def read(self, transaction, instruction):
         """ Gets the lated valued for this transaction """
@@ -130,6 +134,27 @@ class DataManager:
         write_value = self.get_write_lock_value(transaction, instruction)
 
         if not write_value:
-            return variable.last_committed_value
+            return variable.get_last_committed_value()
 
         return write_value
+
+    def commit(self, time, transaction):
+        """ Commit variables """
+
+        if transaction.identifier in self.entries:
+            for variable_identifier, variable in self.entries[transaction.identifier].iteritems():
+                for lock in self.locks[variable_identifier]:
+                    if lock.lock_type == LockType.WRITE:
+                        newest_value = variable.get_last_committed_value()
+                        self.variables[variable_identifier].update(time, newest_value)
+
+        self.clear_locks(transaction.identifier)
+
+    def clear_locks(self, transaction_ident):
+        """ Clear all locks """
+
+        if self.locks:
+            for variable_ident, lock_list in self.locks.iteritems():
+                for lock in lock_list:
+                    if lock.transaction.identifier == transaction_ident:
+                        self.locks[variable_ident].remove(lock)

@@ -4,11 +4,11 @@
 This module represents a site
 
 """
-from enum import Enum
+from enum import IntEnum
 from sites.data_manager import DataManager
 from objects.variable import Variable
 
-class SiteStatus(Enum):
+class SiteStatus(IntEnum):
     """ Represents the possible status of a Site """
     UP = 1,
     DOWN = 2
@@ -17,15 +17,19 @@ class Site:
     """ Represents a single Site """
 
     def __init__(self, site_id, time, logger):
-        self.identifer = site_id
-        self.data_manager = DataManager()
+        self.identifer = site_id # TODO: Fix typo
         self.status = SiteStatus.UP
+        self.create_time = 0
+        variables = {}
 
         # Load all variables
         for i in range(1, 21):
             if i % 2 == 0 or 1 + (i % 10) == site_id:
-                logger.log("Adding " + str(Variable(i)) + " at time "+ str(time))
-                self.data_manager.add_variable(time, Variable(i))
+                new_variable = Variable(time, i)
+                logger.log("Adding %s at time %s" % (new_variable.identifier, str(time)))
+                variables[new_variable.identifier] = new_variable
+
+        self.data_manager = DataManager(variables)
 
     def dump(self):
         """ Dump the results of all commits values to stdout """
