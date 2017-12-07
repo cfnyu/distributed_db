@@ -42,4 +42,7 @@ class Site:
 
     def fail(self):
         """ Fail this site """
-        pass
+        self.status = SiteStatus.DOWN
+        #clear lock list
+        self.data_manager.locks = {}
+        self.data_manager.entries = {}  # clear entries log

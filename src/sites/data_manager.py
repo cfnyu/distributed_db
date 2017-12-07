@@ -8,7 +8,7 @@ Site specific data
 import copy
 from objects.lock import Lock, LockType
 from objects.transaction import TransactionType
-from src.objects.variable import Variable
+from objects.variable import Variable
 
 class DataManager:
     """ Maintains all data for a particular site """
@@ -16,7 +16,6 @@ class DataManager:
     def __init__(self, variables):
         self.entries = {}
         self.variables = variables
-        self.up_time = 0
         self.locks = {}
 
     def write_new_data(self, time, variable_ident, new_value, trans_identifier):

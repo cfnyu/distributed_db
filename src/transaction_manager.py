@@ -284,7 +284,24 @@ class TransactionManager:
         print results
 
     def fail(self, instruction):
-        return "fail"
+        """Fails the site and aborts transaction that accessed (performed read or write operation) the site """
+
+        site_index = instruction.site_identifier
+        self.sites[site_index].fail()
+
+        print "Site " + str(site_index) + " has failed."
+
+        transactions_to_abort = []
+        for trans_ident in self.sites_transactions_accessed_log:
+            if self.transactions[trans_ident].state != TransactionState.COMMITTED:
+                sites_list = self.sites_transactions_accessed_log[trans_ident]
+                for site in sites_list:
+                    if site.identifer == site_index:
+                        transactions_to_abort.append(trans_ident)
+        
+        #if transactions_to_abort:
+           # for trans_id in transactions_to_abort:
+               # self.abort_transaction(trans_id, site_index)
 
     def recover(self, instruction):
         return "recover"
