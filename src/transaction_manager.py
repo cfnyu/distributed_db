@@ -110,7 +110,7 @@ class TransactionManager:
 
         if transaction.identifier in self.sites_transactions_accessed_log:
             del self.sites_transactions_accessed_log[transaction.identifier]
-
+        
     def commit(self, transaction):
         """ Commit a Transaction """
         
@@ -119,9 +119,11 @@ class TransactionManager:
 
         if transaction.identifier in self.sites_transactions_accessed_log:
 
-            for site_id in self.sites_transactions_accessed_log[transaction.identifier]:
-                self.sites[site_id].data_manager.commit(self.clock.time, transaction)
-                self.sites[site_id].data_manager.clear_locks(transaction)
+            for site in self.sites_transactions_accessed_log[transaction.identifier]:
+                self.sites[site.identifer].data_manager.commit(self.clock.time, transaction)
+                self.sites[site.identifer].data_manager.clear_locks(transaction)
+        
+        print transaction.identifier, "committed/ended"
 
         blocked_instructions_list = []
 
@@ -186,8 +188,8 @@ class TransactionManager:
 
                         if transaction.identifier not in self.sites_transactions_accessed_log:
                             self.sites_transactions_accessed_log[transaction.identifier] = set()
-                        else:
-                            self.sites_transactions_accessed_log[transaction.identifier].add(site)
+                    
+                        self.sites_transactions_accessed_log[transaction.identifier].add(site)
 
                         if not first_available_site_id:
                             first_available_site_id = site_id

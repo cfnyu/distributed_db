@@ -28,16 +28,25 @@ class EndTransactionOperationTestCase(unittest.TestCase):
         read = Instruction("R(T1,x2)")
         self.trans_manager.execute(read)
 
+        site_list = []
+        for site in self.trans_manager.sites_transactions_accessed_log["T1"]:
+            site_list.append(site.identifer)
+
         # All sites should have been visited and obtained a read lock
         for site_id, site in self.trans_manager.sites.iteritems():
-            self.assertTrue(site_id in self.trans_manager.sites_transactions_accessed_log["T1"])
+            self.assertTrue(site_id in site_list)
             for lock in site.data_manager.locks["x2"]:
                 self.assertTrue(lock.lock_type == LockType.READ)
                 self.assertTrue(lock.transaction.identifier == "T1")
 
         transaction = self.trans_manager.transactions["T1"]
-        self.trans_manager.end_transaction(transaction)
 
+        with std_out() as (out, err):
+            self.trans_manager.end_transaction(transaction)
+
+        output = out.getvalue().strip()
+        self.assertTrue(output == "T1 committed/ended")
+        
 @contextmanager
 def std_out():
     """ Capture stdout """

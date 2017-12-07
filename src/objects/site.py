@@ -17,7 +17,7 @@ class Site:
     """ Represents a single Site """
 
     def __init__(self, site_id, time, logger):
-        self.identifer = site_id
+        self.identifer = site_id # TODO: Fix typo
         self.status = SiteStatus.UP
         self.create_time = 0
         variables = {}
