@@ -5,6 +5,7 @@
     Concurrency control, deadlock detection, replication, and failure recovery
 """
 import sys
+import os.path
 from transaction_manager import TransactionManager
 from utilities.logger import Logger
 from utilities.parser import Parser
@@ -27,14 +28,19 @@ def main():
 
 def validate_args():
     """ Validate if the user arguments are valid """
+    file_path = sys.argv[1]
 
-    if len(sys.argv) < 2 or sys.argv[1] == '-v':
+    if len(sys.argv) < 2 or file_path == '-v':
         print "To parse a file use the following command: main.py <file_name> [-v]"
         return False
 
     if len(sys.argv) > 2 and sys.argv[2] == '-v':
         print "Verbose set to true"
         LOGGER.show_stdout()
+
+    if not os.path.exists(file_path):
+        print "'%s' not found" % file_path
+        return False
 
     return True
 

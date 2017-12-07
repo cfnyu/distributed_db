@@ -13,10 +13,12 @@ from objects.variable import Variable
 class DataManager:
     """ Maintains all data for a particular site """
 
-    def __init__(self, variables):
+    def __init__(self, variables, logger, site_id):
         self.entries = {}
         self.variables = variables
         self.locks = {}
+        self.logger = logger
+        self.site_id = site_id
 
     def write_new_data(self, time, variable_ident, new_value, trans_identifier):
         """ Method to write the new value of the variable. This will go into the log """
@@ -35,6 +37,9 @@ class DataManager:
                 self.entries[trans_identifier][variable_ident] = new_variable
             else:
                 self.entries[trans_identifier][variable_ident].update(time, new_value)
+            last_committed_value = self.entries[trans_identifier][variable_ident].get_last_committed_value()
+            self.logger.log("%s: Variable %s has been updated to %s" % \
+                            (str(self.site_id), variable_ident, str(last_committed_value)))
 
     def get_variable_value(self, identifier):
         """ Returns the last known committed value for this variable """
@@ -64,7 +69,8 @@ class DataManager:
             self.locks[variable_ident] = []
             lock = Lock(lock_type, transaction, variable)
             self.locks[variable_ident].append(lock)
-            #TODO: log lock acquired
+            self.logger.log("%s: Acquired write lock for variable %s" % \
+                            (str(self.site_id), variable_ident))
             return None
         else:
             lock_list = self.locks[variable_ident]
@@ -72,7 +78,8 @@ class DataManager:
             #If any transaction has a lock on the variable, this transaction cannot obtain a lock
             for lock in lock_list:
                 if lock.transaction.identifier != transaction.identifier:
-                    #TODO: log lock was not acquired
+                    self.logger.log("%s: Failed to acquire write lock for variable %s" % \
+                                    (variable_ident, str(self.site_id)))
                     return lock.transaction.identifier
 
             #If the same transition has a lock, we just update the lock type
@@ -80,7 +87,8 @@ class DataManager:
             for idx, lock in enumerate(lock_list):
                 if lock.transaction.identifier == transaction.identifier:
                     self.locks[variable_ident][idx].lock_type = LockType.WRITE
-            #TODO: log lock updated and acquired
+            self.logger.log("%s: Existing lock for variable %s was update to a write lock" % \
+                            (str(self.site_id), variable_ident))
             return None
 
     def obtain_read_lock(self, transaction, instruction):
@@ -89,6 +97,8 @@ class DataManager:
         variable = self.variables[instruction.variable_identifier]
 
         if not variable.readable:
+            self.logger.log("%s: Variable not readable, cannot obtain Read Lock for Variable %s" % \
+                            (str(self.site_id), variable.identifier))
             return False
 
         if transaction.transaction_type == TransactionType.READ_ONLY:
@@ -107,7 +117,8 @@ class DataManager:
 
         new_lock = Lock(LockType.READ, transaction, variable)
         self.locks[variable.identifier].append(new_lock)
-
+        self.logger.log("%s: Read Lock acquired for Variable %s" % \
+                        (str(self.site_id), variable.identifier))
         return True
 
     def get_write_lock_value(self, transaction, instruction):
@@ -139,7 +150,8 @@ class DataManager:
 
     def commit(self, time, transaction):
         """ Commit variables """
-
+        self.logger.log("%s: Attempting to commit Transaction %s" % \
+                        (str(self.site_id), transaction.identifier))
         if transaction.identifier in self.entries:
             for variable_identifier, variable in self.entries[transaction.identifier].iteritems():
                 if variable_identifier in self.locks:
@@ -148,19 +160,30 @@ class DataManager:
                             newest_value = variable.get_last_committed_value()
                             self.variables[variable_identifier].update_value(time, newest_value)
 
+        for variable_identifier in self.variables.keys():
+            self.variables[variable_identifier].readable = True
+
+        self.logger.log("%s: Successfully committed values for Transaction %s" % \
+                        (str(self.site_id), transaction.identifier))
         self.clear_locks(transaction.identifier)
 
     def clear_locks(self, transaction_ident):
         """ Clear all locks """
 
         if self.locks:
+            self.logger.log("%s: Clearing all locks for Transaction %s" % \
+                            (str(self.site_id), transaction_ident))
+
             for variable_ident, lock_list in self.locks.iteritems():
                 for lock in lock_list:
                     if lock.transaction.identifier == transaction_ident:
                         self.locks[variable_ident].remove(lock)
-    
+
     def clear_entries(self, transaction_ident):
         """Clear the entries for the transaction_ident"""
         if self.entries:
+            self.logger.log("%s: Clearing log entries for Transaction %s" % \
+                            (str(self.site_id), transaction_ident))
+
             if transaction_ident in self.entries:
                 del self.entries[transaction_ident]

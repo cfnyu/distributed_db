@@ -29,7 +29,7 @@ class Site:
                 logger.log("Adding %s at time %s" % (new_variable.identifier, str(time)))
                 variables[new_variable.identifier] = new_variable
 
-        self.data_manager = DataManager(variables)
+        self.data_manager = DataManager(variables, logger, site_id)
 
     def dump(self):
         """ Dump the results of all commits values to stdout """

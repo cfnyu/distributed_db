@@ -25,7 +25,7 @@ class DataManagerTestCase(unittest.TestCase):
                 logger.log("Adding %s at time %s" % (new_variable.identifier, "1"))
                 variables[new_variable.identifier] = new_variable
         
-        self.data_manager = DataManager(variables)
+        self.data_manager = DataManager(variables, logger, 1)
 
     def test_obtain_read_lock_with_no_existing_locks(self):
         """ Test that a lock can be obtained when no locks exist """
@@ -92,10 +92,6 @@ class DataManagerTestCase(unittest.TestCase):
         self.assertTrue(self.data_manager.obtain_read_lock(transaction, instruction))
         new_lock = self.data_manager.locks["x2"][0]
         
-        print "Locks", self.data_manager.locks["x2"]
-        print "Type", type(new_lock), "Lock:", new_lock
-        print "Lock Type", new_lock.lock_type
-
         self.assertTrue(new_lock.lock_type == LockType.READ)
         self.assertEquals(new_lock.transaction.index, 1)
 

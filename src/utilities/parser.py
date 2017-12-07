@@ -44,9 +44,6 @@ class Parser:
 
         if no_of_instructions > 0:
             instruction = self.instructions.pop()
-
-            self.logger.log("Poping: " + str(instruction))
-
             return Instruction(instruction)
 
     def is_valid_instruction(self, value):
