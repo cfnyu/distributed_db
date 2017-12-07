@@ -48,7 +48,7 @@ class ReadOperationTestCase(unittest.TestCase):
             self.trans_manager.execute(read)
 
         output = out.getvalue().strip()
-        self.assertEquals(output, "%s: 10 at site %i" % (variable_identifier, site_id))
+        self.assertEquals(output, "Read %s: 10 at site %i" % (variable_identifier, site_id))
 
 @contextmanager
 def std_out():
