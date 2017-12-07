@@ -8,7 +8,7 @@ Site specific data
 import copy
 from objects.lock import Lock, LockType
 from objects.transaction import TransactionType
-from src.objects.variable import Variable
+from objects.variable import Variable
 
 class DataManager:
     """ Maintains all data for a particular site """
@@ -16,7 +16,6 @@ class DataManager:
     def __init__(self, variables):
         self.entries = {}
         self.variables = variables
-        self.up_time = 0
         self.locks = {}
 
     def write_new_data(self, time, variable_ident, new_value, trans_identifier):
@@ -143,10 +142,11 @@ class DataManager:
 
         if transaction.identifier in self.entries:
             for variable_identifier, variable in self.entries[transaction.identifier].iteritems():
-                for lock in self.locks[variable_identifier]:
-                    if lock.lock_type == LockType.WRITE:
-                        newest_value = variable.get_last_committed_value()
-                        self.variables[variable_identifier].update(time, newest_value)
+                if variable_identifier in self.locks:
+                    for lock in self.locks[variable_identifier]:
+                        if lock.lock_type == LockType.WRITE:
+                            newest_value = variable.get_last_committed_value()
+                            self.variables[variable_identifier].update_value(time, newest_value)
 
         self.clear_locks(transaction.identifier)
 
@@ -158,3 +158,9 @@ class DataManager:
                 for lock in lock_list:
                     if lock.transaction.identifier == transaction_ident:
                         self.locks[variable_ident].remove(lock)
+    
+    def clear_entries(self, transaction_ident):
+        """Clear the entries for the transaction_ident"""
+        if self.entries:
+            if transaction_ident in self.entries:
+                del self.entries[transaction_ident]

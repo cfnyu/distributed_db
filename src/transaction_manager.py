@@ -134,9 +134,32 @@ class TransactionManager:
         if blocked_instructions_list:
             self.rerun(blocked_instructions_list)
 
-    def abort(self, instruction):
+    def abort(self, transaction_ident, site_index=None):
         """ Abort a Transaction """
-        return "Abort a Transaction"
+        self.transactions[transaction_ident].state = TransactionState.ABORTED
+        self.transactions[transaction_ident].end_time = self.clock.time
+
+        if transaction_ident in self.sites_transactions_accessed_log:
+            for site in self.sites_transactions_accessed_log[transaction_ident]:
+                self.sites[site.identifer].data_manager.clear_locks(transaction_ident)
+                self.sites[site.identifer].data_manager.clear_entries(transaction_ident)
+            del self.sites_transactions_accessed_log[transaction_ident]
+
+        if transaction_ident in self.waiting_transactions_instructions_map:
+            del self.waiting_transactions_instructions_map[transaction_ident]
+
+        blocked_instructions_list = []
+        if transaction_ident in self.blocked_transactions_instructions_map:
+            blocked_instructions_list = self.blocked_transactions_instructions_map[transaction_ident]
+            del self.blocked_transactions_instructions_map[transaction_ident]
+        
+        if site_index:
+            print "Transaction " + str(transaction_ident) + " was aborted because it performed read or write operation on failed site " + str(site_index) + "."
+        else:
+            print "Transaction " + str(transaction_ident) + " was aborted because deadlock was detected."
+
+        if blocked_instructions_list:
+            self.rerun(blocked_instructions_list)
 
     def rerun(self, instructions=None):
         # Change status of transaction to Running from Block
@@ -180,7 +203,7 @@ class TransactionManager:
                             # If transaction is blocked, then append in the blocked instructions table and then break
                             if transaction_lock_owner:
                                 if transaction_lock_owner not in self.blocked_transactions_instructions_map:
-                                    self.blocked_transactions_instructions_map[transaction_lock_owner] = instruction
+                                    self.blocked_transactions_instructions_map[transaction_lock_owner] = [instruction]
                                 else:
                                     self.blocked_transactions_instructions_map[transaction_lock_owner].append(instruction)
                                 self.transactions[transaction.identifier].state == TransactionState.BLOCKED
@@ -237,7 +260,7 @@ class TransactionManager:
                         # If transaction is blocked, then append in the blocked instructions table and then break
                         if blocked_transaction_id:
                             if blocked_transaction_id not in self.blocked_transactions_instructions_map:
-                                self.blocked_transactions_instructions_map[blocked_transaction_id] = instruction
+                                self.blocked_transactions_instructions_map[blocked_transaction_id] = [instruction]
                             else:
                                 self.blocked_transactions_instructions_map[blocked_transaction_id].append(instruction)
                             is_transaction_blocked = True
@@ -253,6 +276,9 @@ class TransactionManager:
                             self.sites[site.identifer].data_manager.write_new_data( \
                                 self.clock.time, instruction.variable_identifier, \
                                 instruction.value, instruction.transaction_identifier)
+                            print "Variable " + str(instruction.variable_identifier) + " updated in site " + str(site.identifer) + " with value " + \
+                                str(instruction.value) + " by Transaction " + str(
+                                    instruction.transaction_identifier) + ", provided transaction commits."
 
                                 #TODO: log/print that write successful provided commit happens
                                 
@@ -284,7 +310,24 @@ class TransactionManager:
         print results
 
     def fail(self, instruction):
-        return "fail"
+        """Fails the site and aborts transaction that accessed (performed read or write operation) the site """
+
+        site_index = instruction.site_identifier
+        self.sites[site_index].fail()
+
+        print "Site " + str(site_index) + " has failed."
+
+        transactions_to_abort = []
+        for trans_ident in self.sites_transactions_accessed_log:
+            if self.transactions[trans_ident].state != TransactionState.COMMITTED:
+                sites_list = self.sites_transactions_accessed_log[trans_ident]
+                for site in sites_list:
+                    if site.identifer == site_index:
+                        transactions_to_abort.append(trans_ident)
+        
+        if transactions_to_abort:
+            for trans_id in transactions_to_abort:
+                self.abort(trans_id, site_index)
 
     def recover(self, instruction):
         return "recover"
