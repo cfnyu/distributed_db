@@ -31,7 +31,7 @@ class DataManager:
             if variable_ident not in self.entries[trans_identifier]:
                 # update the new value of the variable
 
-                new_variable = copy.copy(self.variables[variable_ident])
+                new_variable = Variable(time, int(variable_ident.replace("x","")))
                 new_variable.update_value(time, new_value)
 
                 self.entries[trans_identifier][variable_ident] = new_variable
