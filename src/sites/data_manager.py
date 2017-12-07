@@ -142,10 +142,11 @@ class DataManager:
 
         if transaction.identifier in self.entries:
             for variable_identifier, variable in self.entries[transaction.identifier].iteritems():
-                for lock in self.locks[variable_identifier]:
-                    if lock.lock_type == LockType.WRITE:
-                        newest_value = variable.get_last_committed_value()
-                        self.variables[variable_identifier].update(time, newest_value)
+                if variable_identifier in self.locks:
+                    for lock in self.locks[variable_identifier]:
+                        if lock.lock_type == LockType.WRITE:
+                            newest_value = variable.get_last_committed_value()
+                            self.variables[variable_identifier].update_value(time, newest_value)
 
         self.clear_locks(transaction.identifier)
 

@@ -203,7 +203,7 @@ class TransactionManager:
                             # If transaction is blocked, then append in the blocked instructions table and then break
                             if transaction_lock_owner:
                                 if transaction_lock_owner not in self.blocked_transactions_instructions_map:
-                                    self.blocked_transactions_instructions_map[transaction_lock_owner] = instruction
+                                    self.blocked_transactions_instructions_map[transaction_lock_owner] = [instruction]
                                 else:
                                     self.blocked_transactions_instructions_map[transaction_lock_owner].append(instruction)
                                 self.transactions[transaction.identifier].state == TransactionState.BLOCKED
@@ -260,7 +260,7 @@ class TransactionManager:
                         # If transaction is blocked, then append in the blocked instructions table and then break
                         if blocked_transaction_id:
                             if blocked_transaction_id not in self.blocked_transactions_instructions_map:
-                                self.blocked_transactions_instructions_map[blocked_transaction_id] = instruction
+                                self.blocked_transactions_instructions_map[blocked_transaction_id] = [instruction]
                             else:
                                 self.blocked_transactions_instructions_map[blocked_transaction_id].append(instruction)
                             is_transaction_blocked = True
@@ -276,6 +276,9 @@ class TransactionManager:
                             self.sites[site.identifer].data_manager.write_new_data( \
                                 self.clock.time, instruction.variable_identifier, \
                                 instruction.value, instruction.transaction_identifier)
+                            print "Variable " + str(instruction.variable_identifier) + " updated in site " + str(site.identifer) + " with value " + \
+                                str(instruction.value) + " by Transaction " + str(
+                                    instruction.transaction_identifier) + ", provided transaction commits."
 
                                 #TODO: log/print that write successful provided commit happens
                                 
