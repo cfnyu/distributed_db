@@ -112,15 +112,6 @@ class TransactionManagerTestCase(unittest.TestCase):
         output = out.getvalue().strip()
         self.assertEqual(output, "{'x14': { x14: 140 }, 'x18': { x18: 180 }, 'x10': { x10: 100 }, 'x8': { x8: 80 }, 'x16': { x16: 160 }, 'x2': { x2: 20 }, 'x12': { x12: 120 }, 'x6': { x6: 60 }, 'x20': { x20: 200 }, 'x4': { x4: 40 }}")
 
-    def test_execute_end_transaction(self):
-        """ Given a End instruction, end transaction method will be called """
-        # TODO: Re-write function once end function has been written
-
-        instruction = Instruction("end(T1)")
-        result = self.transaction_manager.execute(instruction)
-
-        self.assertEquals(result, "Check if a transaction can be committed")
-
     def test_execute_fail_transaction(self):
         """ Given a Fail instruction, fail method will be called """
         # TODO: Re-write function once fail function has been written

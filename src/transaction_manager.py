@@ -57,7 +57,7 @@ class TransactionManager:
         elif instruction.instruction_type == InstructionType.DUMP_VAR:
             return self.dump(instruction)
         elif instruction.instruction_type == InstructionType.END:
-            return self.can_commit(instruction)
+            return self.end_transaction(self.transactions[instruction.transaction_identifier])
         elif instruction.instruction_type == InstructionType.FAIL:
             return self.fail(instruction)
         elif instruction.instruction_type == InstructionType.READ:
@@ -95,47 +95,49 @@ class TransactionManager:
     def end_transaction(self, transaction):
         """ End a Transaction """
 
+        if transaction.state == TransactionState.ABORTED:
+            print "Transaction %s has already aborted" % transaction.identifier
+            return False
+
         if transaction.transaction_type == TransactionType.READ_ONLY:
-            # If a site is down add this task to the waiting transactions
-            for site in self.sites_transactions_accessed_log[transaction.identifier]:
-                if site.status != SiteStatus.UP:
-                    # TODO: Confirm that this cannot occur with the professor
-                    raise ArithmeticError("You are trying to end a transaction before recovering a site that went down")
+            self.transactions[transaction.identifier].end_time = self.clock.time
+            self.transactions[transaction.identifier].state = TransactionState.COMMITTED
+            print transaction.identifier, "committed/ended"
+            del self.readonly_snapshots[transaction.identifier]
+            return True
 
-        can_commit = False
-        for site_id, access_time in self.sites_transactions_accessed_log[transaction.identifier].iteritems():
-            site = self.sites[site_id]
+        self.commit(transaction)
 
-            can_commit = (site.status == SiteStatus.UP and site.create_time == access_time)
+        if transaction.identifier in self.sites_transactions_accessed_log:
+            del self.sites_transactions_accessed_log[transaction.identifier]
 
-            if not can_commit:
-                break
-
-        transaction.end_time = self.clock.time
-        if transaction.transaction_type == TransactionType.READ_ONLY or can_commit:
-            for site_id, access_time in self.sites_transactions_accessed_log[transaction.identifier].iteritems():
-                site = self.sites[site_id]
-                site.data_manager.commit(self.clock.time, transaction)
-                site.data_manager.clear_locks(transaction)
-
-            self.sites_transactions_accessed_log.pop(transaction.identifier, None)
-            self.transactions.pop(transaction.identifier, None)
-
-    def get(self, instruction):
-        """ Get a Transaction """
-        return "Get a Transaction"
-
-    def can_commit(self, instruction):
-        """ Check if a transaction can be committed """
-        return "Check if a transaction can be committed"
-
-    def commit(self, instruction):
+    def commit(self, transaction):
         """ Commit a Transaction """
-        return "Commit a Transaction"
+        
+        self.transactions[transaction.identifier].end_time = self.clock.time
+        self.transactions[transaction.identifier].state = TransactionState.COMMITTED
+
+        if transaction.identifier in self.sites_transactions_accessed_log:
+
+            for site_id in self.sites_transactions_accessed_log[transaction.identifier]:
+                self.sites[site_id].data_manager.commit(self.clock.time, transaction)
+                self.sites[site_id].data_manager.clear_locks(transaction)
+
+        blocked_instructions_list = []
+
+        if transaction.identifier in self.blocked_transactions_instructions_map:
+            blocked_instructions_list = self.blocked_transactions_instructions_map[transaction.identifier]
+            del self.blocked_transactions_instructions_map[transaction.identifier]
+
+        if blocked_instructions_list:
+            self.rerun(blocked_instructions_list)
 
     def abort(self, instruction):
         """ Abort a Transaction """
         return "Abort a Transaction"
+
+    def rerun(self, instructions=None):
+        pass
 
     def read(self, instruction):
         """ Read the value of a Variable """
@@ -237,23 +239,19 @@ class TransactionManager:
 
                         #do the actual updating here       
                         for site in stable_sites:
-                            if instruction.variable_identifier in self.sites[site.identifer].variables:
-                                self.sites[site.identifer].data_manager.write_new_data( \
-                                    self.clock.time, instruction.variable_identifier, \
-                                    instruction.value, instruction.transaction_identifier)
+                            self.sites[site.identifer].data_manager.write_new_data( \
+                                self.clock.time, instruction.variable_identifier, \
+                                instruction.value, instruction.transaction_identifier)
 
                                 #TODO: log/print that write successful provided commit happens
                                 
-                                #add the sites the value was written to by the transaction in a dictionary
-                                #This will be used to abort the transaction when any of the stable_sites fail
-                                if transaction_ident not in self.sites_transactions_accessed_log:
-                                    self.sites_transactions_accessed_log[transaction_ident] = {}
-                                
-                                self.sites_transactions_accessed_log[transaction_ident][site.identifer] = self.clock.time
-                                #     set(stable_sites)
-                                # else:
-                                #     sites_set = self.sites_transactions_accessed_log[transaction_ident]
-                                #     self.sites_transactions_accessed_log[transaction_ident] = sites_set.union(set(stable_sites))
+                        #add the sites the value was written to by the transaction in a dictionary
+                        #This will be used to abort the transaction when any of the stable_sites fail
+                        if transaction_ident not in self.sites_transactions_accessed_log:
+                            self.sites_transactions_accessed_log[transaction_ident] = set(stable_sites)
+                        else:
+                            sites_set = self.sites_transactions_accessed_log[transaction_ident]
+                            self.sites_transactions_accessed_log[transaction_ident] = sites_set.union(set(stable_sites))
 
     def dump(self, instruction):
         """ Prints out variable values to stdout """
