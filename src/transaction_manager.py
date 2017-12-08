@@ -123,6 +123,9 @@ class TransactionManager:
         if transaction.identifier in self.sites_transactions_accessed_log:
             del self.sites_transactions_accessed_log[transaction.identifier]
 
+        if transaction.identifier in self.sites_transactions_read_write_log:
+            del self.sites_transactions_read_write_log[transaction.identifier]
+
     def commit(self, transaction):
         """ Commit a Transaction """
 
@@ -371,7 +374,6 @@ class TransactionManager:
                         sites_set = self.sites_transactions_accessed_log[transaction_ident]
                         self.sites_transactions_accessed_log[transaction_ident] = sites_set.union(set(stable_sites))
 
-
     def dump(self, instruction):
         """ Prints out variable values to stdout """
 
@@ -463,6 +465,7 @@ class TransactionManager:
             self.logger.log("Youngest transaction id: " + transaction_id_to_abort + ". Will be aborted.")
             self.abort(transaction_id_to_abort)
             
+            # TODO: Review with Nisha
             for survived_transaction in set(visited_set).symmetric_difference(set([transaction_id_to_abort])):
                 if survived_transaction in self.blocked_transactions_instructions_map:
                     instructions = self.blocked_transactions_instructions_map[survived_transaction]

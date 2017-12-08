@@ -44,7 +44,7 @@ class Site:
 
         for variable in self.data_manager.variables.values():
             variable.readable = not variable.replicated
-           
+
     def fail(self):
         """ Fail this site """
         self.status = SiteStatus.DOWN

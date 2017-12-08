@@ -49,6 +49,9 @@ class Parser:
     def is_valid_instruction(self, value):
         """ Check value to see if it matches an approved instruction """
 
+        if value.strip().startswith("//"):
+            return False
+
         operations = ['begin', 'W', 'R', 'end', 'dump', 'beginRO', 'fail', 'recover']
 
         return any(val in value for val in operations)
