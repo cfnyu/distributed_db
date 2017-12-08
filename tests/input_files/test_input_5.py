@@ -69,8 +69,8 @@ class InputFiveTestCase(unittest.TestCase):
             self.assertEquals(variable.identifier, "x6")
             self.assertEquals(variable.replicated, True)
             self.assertEquals(variable.readable, True)
-            self.assertEquals(variable.value, 60)
-            self.assertEquals(variable.written_values[0], 60)
+            self.assertEquals(variable.value, "60")
+            self.assertEquals(variable.written_values[DEFAULT_START_TIME], "60")
             self.assertTrue(len(variable.written_values) == 1)
 
             self.assertTrue("x6" in site.data_manager.locks)
@@ -79,7 +79,7 @@ class InputFiveTestCase(unittest.TestCase):
             self.assertTrue(len(site.data_manager.entries["T1"]["x6"].written_values) == 2)
 
             self.assertEquals(site.data_manager.entries["T1"]["x6"] \
-                                .written_values[DEFAULT_START_TIME], 60)
+                                .written_values[DEFAULT_START_TIME], "60")
 
             self.assertEquals(site.data_manager.entries["T1"]["x6"] \
                                 .written_values[DEFAULT_START_TIME + 3], "66") # 3rd Instruction
@@ -135,8 +135,8 @@ class InputFiveTestCase(unittest.TestCase):
                 self.assertEquals(variable.identifier, "x8")
                 self.assertEquals(variable.replicated, True)
                 self.assertEquals(variable.readable, True)
-                self.assertEquals(variable.value, 80)
-                self.assertEquals(variable.written_values[0], 80)
+                self.assertEquals(variable.value, "80")
+                self.assertEquals(variable.written_values[DEFAULT_START_TIME], "80")
                 self.assertTrue(len(variable.written_values) == 1)
 
                 self.assertFalse("x8" in site.data_manager.locks)
@@ -147,8 +147,8 @@ class InputFiveTestCase(unittest.TestCase):
                 self.assertEquals(variable.identifier, "x8")
                 self.assertEquals(variable.replicated, True)
                 self.assertEquals(variable.readable, True)
-                self.assertEquals(variable.value, 80)
-                self.assertEquals(variable.written_values[0], 80)
+                self.assertEquals(variable.value, "80")
+                self.assertEquals(variable.written_values[DEFAULT_START_TIME], "80")
                 self.assertTrue(len(variable.written_values) == 1)
 
                 self.assertTrue("x8" in site.data_manager.locks)
@@ -157,7 +157,7 @@ class InputFiveTestCase(unittest.TestCase):
                 self.assertTrue(len(site.data_manager.entries["T2"]["x8"].written_values) == 2)
 
                 self.assertEquals(site.data_manager.entries["T2"]["x8"] \
-                                    .written_values[DEFAULT_START_TIME], 80)
+                                    .written_values[DEFAULT_START_TIME], "80")
 
                 self.assertEquals(site.data_manager.entries["T2"]["x8"] \
                                     .written_values[DEFAULT_START_TIME + 5], "88") # 5th Instruction

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """ Test Data Manager """
 import unittest
-#from src.objects.site import Site
 from src.objects.instruction import Instruction
 from src.objects.lock import Lock, LockType
 from src.objects.transaction import Transaction, TransactionType
@@ -130,19 +129,19 @@ class DataManagerTestCase(unittest.TestCase):
         transaction = Transaction("T1", TransactionType.READ_WRITE, 1)
         instruction = Instruction("R(T1, x2)")
 
-        self.assertEquals(self.data_manager.read(transaction, instruction), 20)
+        self.assertEquals(self.data_manager.read(transaction, instruction), "20")
 
     def test_entries_maintains_values_per_transaction(self):
         """ Ensure that entities is keeping the log of committed values per transaction """
 
-        self.assertEquals(self.data_manager.variables["x6"].value, 60)
+        self.assertEquals(self.data_manager.variables["x6"].value, "60")
         self.data_manager.write_new_data(2, "x6", 999, "T1")
 
         # Confirm the latest Committed Value wasn't changed by a transaction update to variable
-        self.assertEquals(self.data_manager.variables["x6"].value, 60)
+        self.assertEquals(self.data_manager.variables["x6"].value, "60")
         print self.data_manager.entries["T1"]["x6"]
         
         # Confirm that the new write just adds to the log
-        self.assertEquals(self.data_manager.entries["T1"]["x6"].written_values[1], 60)
-        self.assertEquals(self.data_manager.entries["T1"]["x6"].written_values[2], 999)
+        self.assertEquals(self.data_manager.entries["T1"]["x6"].written_values[1], "60")
+        self.assertEquals(self.data_manager.entries["T1"]["x6"].written_values[2], "999")
 

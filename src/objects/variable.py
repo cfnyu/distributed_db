@@ -13,7 +13,7 @@ class Variable:
         self.identifier = "x%i" % self.index
         self.replicated = (var_id % 2 == 0)
         self.readable = True
-        self.value = 10 * var_id
+        self.value = str(10 * var_id)
         self.written_values = {}
         self.update_value(time, self.value)
 
@@ -24,7 +24,7 @@ class Variable:
         """ Update the current variable value """
 
         self.value = new_value
-        self.written_values[time] = new_value
+        self.written_values[time] = str(new_value)
 
     def get_last_committed_value(self):
         """ Returns the last committed value from the log """

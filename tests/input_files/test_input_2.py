@@ -73,14 +73,14 @@ class InputTwoTestCase(unittest.TestCase):
                 self.assertEquals(variable.identifier, "x1")
                 self.assertEquals(variable.replicated, False)
                 self.assertEquals(variable.readable, True)
-                self.assertEquals(variable.value, 10)
-                self.assertEquals(variable.written_values[0], 10)
+                self.assertEquals(variable.value, "10")
+                self.assertEquals(variable.written_values[DEFAULT_START_TIME], "10")
                 self.assertTrue(len(variable.written_values) == 1)
 
                 self.assertTrue("x1" in site.data_manager.locks)
                 self.assertTrue("T1" in site.data_manager.entries)
                 self.assertTrue("x1" in site.data_manager.entries["T1"])
-                self.assertEquals(site.data_manager.entries["T1"]["x1"].written_values[DEFAULT_START_TIME], 10)
+                self.assertEquals(site.data_manager.entries["T1"]["x1"].written_values[DEFAULT_START_TIME], "10")
                 self.assertTrue("T1" in self.transaction_manager.sites_transactions_read_write_log)
             else:
                 self.assertFalse("x1" in site.data_manager.variables)
@@ -124,14 +124,14 @@ class InputTwoTestCase(unittest.TestCase):
             self.assertEquals(variable.identifier, "x2")
             self.assertEquals(variable.replicated, True)
             self.assertEquals(variable.readable, True)
-            self.assertEquals(variable.value, 20)
-            self.assertEquals(variable.written_values[0], 20)
+            self.assertEquals(variable.value, "20")
+            self.assertEquals(variable.written_values[DEFAULT_START_TIME], "20")
             self.assertTrue(len(variable.written_values) == 1)
 
             self.assertTrue("x2" in site.data_manager.locks)
             self.assertTrue("T1" in site.data_manager.entries)
             self.assertTrue("x2" in site.data_manager.entries["T1"])
-            self.assertEquals(site.data_manager.entries["T1"]["x2"].written_values[DEFAULT_START_TIME], 20)
+            self.assertEquals(site.data_manager.entries["T1"]["x2"].written_values[DEFAULT_START_TIME], "20")
 
         self.assertTrue("T1" in self.transaction_manager.sites_transactions_read_write_log)
         self.assertEquals(self.transaction_manager.sites_transactions_read_write_log["T1"], \

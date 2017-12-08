@@ -87,8 +87,8 @@ class InputThreePointFiveTestCase(unittest.TestCase):
             self.assertEquals(variable.identifier, "x8")
             self.assertEquals(variable.replicated, True)
             self.assertEquals(variable.readable, True)
-            self.assertEquals(variable.value, 80)
-            self.assertEquals(variable.written_values[0], 80)
+            self.assertEquals(variable.value, "80")
+            self.assertEquals(variable.written_values[DEFAULT_START_TIME], "80")
             self.assertTrue(len(variable.written_values) == 1)
 
             self.assertTrue("x8" in site.data_manager.locks)
@@ -97,7 +97,7 @@ class InputThreePointFiveTestCase(unittest.TestCase):
             self.assertTrue(len(site.data_manager.entries["T2"]["x8"].written_values) == 2)
 
             self.assertEquals(site.data_manager.entries["T2"]["x8"] \
-                                .written_values[DEFAULT_START_TIME], 80)
+                                .written_values[DEFAULT_START_TIME], "80")
 
             self.assertEquals(site.data_manager.entries["T2"]["x8"] \
                                 .written_values[DEFAULT_START_TIME + 4], "88") # 4th Instruction
@@ -173,8 +173,8 @@ class InputThreePointFiveTestCase(unittest.TestCase):
                 self.assertEquals(variable.identifier, "x4")
                 self.assertEquals(variable.replicated, True)
                 self.assertEquals(variable.readable, True)
-                self.assertEquals(variable.value, 40)
-                self.assertEquals(variable.written_values[0], 40)
+                self.assertEquals(variable.value, "40")
+                self.assertEquals(variable.written_values[DEFAULT_START_TIME], "40")
                 self.assertTrue(len(variable.written_values) == 1)
 
                 self.assertFalse("x4" in site.data_manager.locks)
@@ -185,8 +185,8 @@ class InputThreePointFiveTestCase(unittest.TestCase):
                 self.assertEquals(variable.identifier, "x4")
                 self.assertEquals(variable.replicated, True)
                 self.assertEquals(variable.readable, True)
-                self.assertEquals(variable.value, 40)
-                self.assertEquals(variable.written_values[0], 40)
+                self.assertEquals(variable.value, "40")
+                self.assertEquals(variable.written_values[DEFAULT_START_TIME], "40")
                 self.assertTrue(len(variable.written_values) == 1)
 
                 self.assertTrue("x4" in site.data_manager.locks)
@@ -195,7 +195,7 @@ class InputThreePointFiveTestCase(unittest.TestCase):
                 self.assertTrue(len(site.data_manager.entries["T1"]["x4"].written_values) == 2)
 
                 self.assertEquals(site.data_manager.entries["T1"]["x4"] \
-                                    .written_values[DEFAULT_START_TIME], 40)
+                                    .written_values[DEFAULT_START_TIME], "40")
 
                 self.assertEquals(site.data_manager.entries["T1"]["x4"] \
                                     .written_values[DEFAULT_START_TIME + 7], "91") # 7th Instruction
