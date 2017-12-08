@@ -45,7 +45,7 @@ class EndTransactionOperationTestCase(unittest.TestCase):
             self.trans_manager.end_transaction(transaction)
 
         output = out.getvalue().strip()
-        self.assertTrue(output == "Transaction T1 committed successfully")
+        self.assertTrue(output == "T1 committed")
         
 @contextmanager
 def std_out():

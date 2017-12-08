@@ -30,8 +30,8 @@ class DataManager:
 
             if variable_ident not in self.entries[trans_identifier]:
                 # update the new value of the variable
-
-                new_variable = Variable(time, int(variable_ident.replace("x","")))
+                initial_time = max(time for time, value in self.variables[variable_ident].written_values.iteritems() if value != 0)
+                new_variable = Variable(initial_time, int(variable_ident.replace("x","")))
                 new_variable.update_value(time, new_value)
 
                 self.entries[trans_identifier][variable_ident] = new_variable

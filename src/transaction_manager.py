@@ -164,6 +164,9 @@ class TransactionManager:
         if transaction_ident in self.waiting_transactions_instructions_map:
             del self.waiting_transactions_instructions_map[transaction_ident]
 
+        if transaction_ident in self.sites_transactions_read_write_log:
+            del self.sites_transactions_read_write_log[transaction_ident]
+
         blocked_instructions_list = []
         if transaction_ident in self.blocked_transactions_instructions_map:
             blocked_instructions_list = self.blocked_transactions_instructions_map[transaction_ident]
@@ -459,7 +462,12 @@ class TransactionManager:
             transaction_id_to_abort = self.get_transaction_id_to_kill(visited_set)
             self.logger.log("Youngest transaction id: " + transaction_id_to_abort + ". Will be aborted.")
             self.abort(transaction_id_to_abort)
-
+            
+            for survived_transaction in set(visited_set).symmetric_difference(set([transaction_id_to_abort])):
+                if survived_transaction in self.blocked_transactions_instructions_map:
+                    instructions = self.blocked_transactions_instructions_map[survived_transaction]
+                    del self.blocked_transactions_instructions_map[survived_transaction]
+                    self.rerun(instructions)
 
     def create_graph(self, active_transactions_list):
         """ Create a transaction graph

@@ -17,6 +17,10 @@ class TransactionManagerTestCase(unittest.TestCase):
         # self.logger.show_stdout()
         self.transaction_manager = TransactionManager(self.logger)
 
+    def test_constructor(self):
+        """ Test that the constructor is doing what is expected """
+        pass
+
     def test_execute_begin_transaction_read_write(self):
         """ Testing a Read/Write Begin transaction statement """
 
@@ -37,9 +41,14 @@ class TransactionManagerTestCase(unittest.TestCase):
         self.transaction_manager.execute(instruction)
         trans1 = self.transaction_manager.transactions["T1"]
 
-        self.assertEquals(len(self.transaction_manager.transactions), 1)
-        self.assertTrue(instruction.transaction_identifier in self.transaction_manager.readonly_snapshots)
-        self.assertEquals(len(self.transaction_manager.readonly_snapshots["T1"].keys()), 10)
+        self.assertTrue("T1" in self.transaction_manager.transactions)
+        self.assertEquals(self.transaction_manager.transactions["T1"].transaction_type, TransactionType.READ_ONLY)
+
+        print self.transaction_manager.readonly_snapshots
+        for site in self.transaction_manager.sites.values():
+            for variable_identifier in site.data_manager.variables:
+                self.assertTrue(variable_identifier in self.transaction_manager.readonly_snapshots["T1"])
+                
         self.assertEquals(trans1.identifier, "T1")
         self.assertEquals(trans1.transaction_type, TransactionType.READ_ONLY)
         self.assertEquals(trans1.start_time, 1)
@@ -51,31 +60,10 @@ class TransactionManagerTestCase(unittest.TestCase):
 
         instruction = Instruction("BeginRO(T1)")
         self.transaction_manager.execute(instruction)
-        trans1 = self.transaction_manager.readonly_snapshots["T1"]
-        site_1 = trans1[1]
-        site_2 = trans1[2]
-        site_3 = trans1[3]
-        site_3 = trans1[3]
-        site_4 = trans1[4]
-        site_5 = trans1[5]
-        site_6 = trans1[6]
-        site_7 = trans1[7]
-        site_8 = trans1[8]
-        site_9 = trans1[9]
-        site_10 = trans1[10]
-
-        self.assertTrue(instruction.transaction_identifier in self.transaction_manager.readonly_snapshots)
-        self.assertEquals(len(trans1.keys()), 10)
-        self.assertEquals(site_1, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x20', 'x4'])
-        self.assertEquals(site_2, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x11', 'x12', 'x1', 'x6', 'x20', 'x4'])
-        self.assertEquals(site_3, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x20', 'x4'])
-        self.assertEquals(site_4, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x3', 'x12', 'x13', 'x6', 'x20', 'x4'])
-        self.assertEquals(site_5, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x20', 'x4'])
-        self.assertEquals(site_6, ['x14', 'x20', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x15', 'x4', 'x5'])
-        self.assertEquals(site_7, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x20', 'x4'])
-        self.assertEquals(site_8, ['x14', 'x20', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x7', 'x4', 'x17'])
-        self.assertEquals(site_9, ['x14', 'x18', 'x10', 'x8', 'x16', 'x2', 'x12', 'x6', 'x20', 'x4'])
-        self.assertEquals(site_10, ['x19', 'x14', 'x18', 'x10', 'x8', 'x9', 'x16', 'x2', 'x12', 'x6', 'x20', 'x4'])
+        for site in self.transaction_manager.sites.values():
+            self.assertTrue(len(site.data_manager.variables) > 0)
+            for variable_identifier in site.data_manager.variables:
+                self.assertTrue(variable_identifier in self.transaction_manager.readonly_snapshots["T1"])
 
     @unittest.skip("Unrealistic output to test")
     def test_execute_dump_all_transaction(self):
@@ -125,4 +113,3 @@ def std_out():
         yield sys.stdout, sys.stderr
     finally:
         sys.stdout, sys.stderr = old_out, old_err
-
