@@ -43,15 +43,18 @@ class TransactionManager:
                 self.variables_to_site_map[variable.identifier].append(site.identifer)
 
     def execute(self, instruction):
+        self.clock.tick()
+        self.logger.log("At clock tick : " + str(self.clock.time))
+        self.rerun()
+        self.execute_instruction(instruction)
+
+    def execute_instruction(self, instruction):
         """
         Reads instruction object and based on type it will call
         The appropriate method below or a site method
 
         """
-        self.clock.tick()
-        self.logger.log("At clock tick : " + str(self.clock.time))
-        self.rerun()
-
+        
         if instruction.instruction_type == InstructionType.BEGIN or \
            instruction.instruction_type == InstructionType.BEGIN_RO:
             return self.begin_transaction(instruction)
@@ -204,14 +207,14 @@ class TransactionManager:
             for instruction in waiting_instructions_list:
                 self.logger.log("Rerunning transaction: " + str(instruction.transaction_identifier))
                 self.transactions[instruction.transaction_identifier].state = TransactionState.RUNNING
-                self.execute(instruction)
+                self.execute_instruction(instruction)
 
         if instructions:
             for instruction in instructions:
                 if(self.transactions[instruction.transaction_identifier].state != TransactionState.ABORTED):
                     self.logger.log("Rerunning transaction: " + instruction.transaction_identifier)
                     self.transactions[instruction.transaction_identifier].state = TransactionState.RUNNING
-                    self.execute(instruction)
+                    self.execute_instruction(instruction)
                 else:
                     self.logger.log("Couldn't rerun transaction: " + instruction.transaction_identifier + " because it was aborted.")
 

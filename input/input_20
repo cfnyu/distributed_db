@@ -1,0 +1,11 @@
+// Test 20
+// Mulitple writes from the same Transaction
+begin(T1)
+begin(T2)
+W(T1,x2,22)
+W(T2,x4,44)
+R(T1,x2)
+W(T1,x2,98)
+end(T2)
+R(T1,x2)
+end(T1)

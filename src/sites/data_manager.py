@@ -36,7 +36,7 @@ class DataManager:
 
                 self.entries[trans_identifier][variable_ident] = new_variable
             else:
-                self.entries[trans_identifier][variable_ident].update(time, new_value)
+                self.entries[trans_identifier][variable_ident].update_value(time, new_value)
             last_committed_value = self.entries[trans_identifier][variable_ident].get_last_committed_value()
             self.logger.log("Site %s: Current Variable %s has been updated to %s by Transaction %s (if committed)" % \
                             (str(self.site_id), variable_ident, str(last_committed_value), trans_identifier))
