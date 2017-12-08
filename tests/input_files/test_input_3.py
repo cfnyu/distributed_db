@@ -24,7 +24,7 @@ class InputThreeTestCase(unittest.TestCase):
         self.logger = Logger()
         self.transaction_manager = TransactionManager(self.logger)
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        self.input_dir = dir_path.replace("/tests/input_files", "/input")
+        self.input_dir = dir_path.replace("/tests/input_files", "/samples")
 
     def tearDown(self):
         self.transaction_manager = None

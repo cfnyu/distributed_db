@@ -11,7 +11,7 @@ Download the distributed_db.rpz file from the root directory and from a command 
 TODO: Setup howto for reprounzip
 
 ###### Using Vagrant
-Make sure to have Vagrant installed before you begin.
+Make sure to have Vagrant installed before you begin. For install instructions visit: [Vagrant Getting Started](https://www.vagrantup.com/intro/getting-started/)
 Clone this repository locally and cd into `distributed_db`.
 From a command-line execute `vagrant up` once the virtual machine has been created execute `vagrant ssh`.
 Once logged into the virtual machine, cd into `/vagrant/src` and execute the following command:
