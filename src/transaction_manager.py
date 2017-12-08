@@ -36,7 +36,7 @@ class TransactionManager:
             self.sites[site.identifer] = site
             self.site_to_variables_map[site.identifer] = site.data_manager.variables
 
-            for var_id, variable in site.data_manager.variables.iteritems():
+            for variable in site.data_manager.variables.values():
                 if variable.identifier not in self.variables_to_site_map:
                     self.variables_to_site_map[variable.identifier] = []
 

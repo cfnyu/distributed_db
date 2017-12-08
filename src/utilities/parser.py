@@ -54,4 +54,4 @@ class Parser:
 
         operations = ['begin', 'W', 'R', 'end', 'dump', 'beginRO', 'fail', 'recover']
 
-        return any(val in value for val in operations)
+        return any(filter(lambda operation: value.strip().startswith(operation), operations))

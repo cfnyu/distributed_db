@@ -41,20 +41,6 @@ class DataManager:
             self.logger.log("Site %s: Current Variable %s has been updated to %s by Transaction %s (if committed)" % \
                             (str(self.site_id), variable_ident, str(last_committed_value), trans_identifier))
 
-    def get_variable_value(self, identifier):
-        """ Returns the last known committed value for this variable """
-
-        return self.variables[identifier].value
-
-    def get_value_at_time(self, variable, time, transaction):
-        """ Returns the last known committed value for this variable """
-
-        if transaction.trans_identifier in self.entries:
-            if not time in self.entries[transaction.trans_identifier]:
-                return self.get_value_at_time(variable, time-1, transaction)
-            else:
-                return self.entries[transaction.trans_identifier][time].value
-
     def obtain_write_lock(self, instruction, transaction):
         """ Obtain the Write Lock for a Transaction """
 
