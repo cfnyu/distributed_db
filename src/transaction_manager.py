@@ -54,7 +54,8 @@ class TransactionManager:
         The appropriate method below or a site method
 
         """
-        
+        self.logger.log("Executing Instruction: " + str(instruction))
+
         if instruction.instruction_type == InstructionType.BEGIN or \
            instruction.instruction_type == InstructionType.BEGIN_RO:
             return self.begin_transaction(instruction)
@@ -144,6 +145,10 @@ class TransactionManager:
         print transaction.identifier, "committed"
         self.logger.log("RW Transaction %s committed successfully" %
                         transaction.identifier)
+        
+        #self.logger.log("Current Variables after commit:")
+        #for site_id in self.sites:
+            #self.logger.log(str(site_id) + " = " + str(self.sites[site_id].data_manager.variables.values()))
 
         blocked_instructions_list = []
 
@@ -187,6 +192,10 @@ class TransactionManager:
             self.logger.log("%s was aborted because deadlock was detected." % transaction_ident)
             print "%s was aborted because deadlock was detected." % transaction_ident
 
+        #self.logger.log("Current Variables after abort:")
+        #for site_id in self.sites:
+            #self.logger.log(str(site_id) + " = " + str(self.sites[site_id].data_manager.variables.values()))
+
         if blocked_instructions_list:
             self.rerun(blocked_instructions_list)
 
@@ -221,6 +230,8 @@ class TransactionManager:
     def read(self, instruction):
         """ Read the value of a Variable """
 
+        self.logger.log(instruction.transaction_identifier + ": Attempting to read Variable " + instruction.variable_identifier)
+
         if instruction.transaction_identifier not in self.transactions:
             raise ValueError("Transaction %s was never started" % \
                              instruction.transaction_identifier)
@@ -253,7 +264,7 @@ class TransactionManager:
             self.transactions[transaction.identifier] = transaction
             self.waiting_transactions_instructions_map[transaction.identifier] = instruction
         else:
-            self.logger.log("%i site(s) are up" % possible_sites)
+            self.logger.log("%i site(s) are up, attempting to read" % possible_sites)
             if transaction.transaction_type == TransactionType.READ_ONLY:
                 if instruction.variable_identifier in self.readonly_snapshots[transaction.identifier]:
                     print "%s: Read %s - value %s" % (transaction.identifier, instruction.variable_identifier, \
@@ -268,6 +279,8 @@ class TransactionManager:
 
                         # If transaction is blocked, then append in the blocked instructions table and then break
                         if transaction_lock_owner:
+                            self.logger.log("A Read lock could not be obtained, Transaction %s has been added to the blocked queue" % str(transaction.identifier))
+                                        
                             if transaction_lock_owner not in self.blocked_transactions_instructions_map:
                                 self.blocked_transactions_instructions_map[transaction_lock_owner] = [instruction]
                             else:
@@ -307,6 +320,8 @@ class TransactionManager:
     def write(self, instruction):
         """ Write the value of a Variable """
 
+        self.logger.log(instruction.transaction_identifier + ": Attempting to write Variable " + instruction.variable_identifier)
+
         #get the transaction identifier from the instruction
         transaction_ident = instruction.transaction_identifier
 
@@ -335,6 +350,8 @@ class TransactionManager:
                 self.transactions[transaction_ident] = transaction
                 self.waiting_transactions_instructions_map[transaction_ident] = instruction
             else:
+                self.logger.log(
+                    "%i site(s) are up, attempting to write" % site_count)
                 is_transaction_blocked = False
                 for site in stable_sites:
                     # This checks if lock can be obtained on the available site,
@@ -418,6 +435,7 @@ class TransactionManager:
                         transactions_to_abort.append(trans_ident)
 
         if transactions_to_abort:
+            self.logger.log("Aborting transactions that accessed the failed site: " + str(transactions_to_abort))
             for trans_id in transactions_to_abort:
                 self.abort(trans_id, site_index)
 
