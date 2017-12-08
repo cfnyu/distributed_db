@@ -11,7 +11,7 @@ class Variable:
     def __init__(self, time, var_id):
         self.index = var_id
         self.identifier = "x%i" % self.index
-        self.replicated = (var_id / 2 == 0)
+        self.replicated = (var_id % 2 == 0)
         self.readable = True
         self.value = 10 * var_id
         self.written_values = {}

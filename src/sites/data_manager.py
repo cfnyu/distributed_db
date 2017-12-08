@@ -145,7 +145,7 @@ class DataManager:
         return None
 
     def read(self, transaction, instruction):
-        """ Gets the lated valued for this transaction """
+        """ Gets the latest valued for this transaction """
 
         variable = self.variables[instruction.variable_identifier]
 
