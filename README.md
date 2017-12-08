@@ -5,19 +5,31 @@
 This application can be rebuilt and re-run using either [Reprozip](https://pypi.python.org/pypi/reprozip/0.2.1) or [Vagrant](https://www.vagrantup.com)
 
 ###### Using Reprozip
-Make sure to have reprounzip installed before you begin.
-Download the distributed_db.rpz file from the root directory and from a command line use the following:
-
-TODO: Setup howto for reprounzip
+If you'd prefer to use Reprozip our reprozip package is in the root directory called `distributed_db.rpz`
 
 ###### Using Vagrant
 Make sure to have Vagrant installed before you begin. For install instructions visit: [Vagrant Getting Started](https://www.vagrantup.com/intro/getting-started/)
-Clone this repository locally and cd into `distributed_db`.
-From a command-line execute `vagrant up` once the virtual machine has been created execute `vagrant ssh`.
-Once logged into the virtual machine, cd into `/vagrant/src` and execute the following command:
+
+After Vagrant has been setup, execute the following commands:
+```bash
+git clone https://github.com/cfnyu/distributed_db.git
+cd distributed_db
+```
+> NOTE: Please copy the input files you intend to run inside the distributed_db folder. You can call it what ever you want
+
+Copy your input files to a directory in the `distributed_db` folder and execute the following commands:
 
 ```bash
-python main.py <input_file> [-v]
+vagrant up
+vagrant ssh
+```
+
+Once the virtual machine is up and you have ssh'd into the new box, run the following commands from inside the VM:
+
+```bash
+cd /vagrant
+python main.py <input_file_path> [-v]
 ```
 
 > The -v is an optional argument to set the Verbose flag to True, which will output log messages to stdout
+
