@@ -139,7 +139,6 @@ class DataManagerTestCase(unittest.TestCase):
 
         # Confirm the latest Committed Value wasn't changed by a transaction update to variable
         self.assertEquals(self.data_manager.variables["x6"].value, "60")
-        print self.data_manager.entries["T1"]["x6"]
         
         # Confirm that the new write just adds to the log
         self.assertEquals(self.data_manager.entries["T1"]["x6"].written_values[1], "60")

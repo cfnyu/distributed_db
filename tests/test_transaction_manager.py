@@ -44,7 +44,6 @@ class TransactionManagerTestCase(unittest.TestCase):
         self.assertTrue("T1" in self.transaction_manager.transactions)
         self.assertEquals(self.transaction_manager.transactions["T1"].transaction_type, TransactionType.READ_ONLY)
 
-        print self.transaction_manager.readonly_snapshots
         for site in self.transaction_manager.sites.values():
             for variable_identifier in site.data_manager.variables:
                 self.assertTrue(variable_identifier in self.transaction_manager.readonly_snapshots["T1"])
