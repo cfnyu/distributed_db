@@ -180,7 +180,7 @@ class InputOneTestCase(unittest.TestCase):
         self.assertEquals(self.transaction_manager.transactions["T1"].state, \
                           TransactionState.RUNNING)
 
-        self.assertFalse("T1" in self.transaction_manager.blocked_transactions_instructions_map)
+        self.assertTrue("T1" in self.transaction_manager.blocked_transactions_instructions_map)
         self.assertFalse("T2" in self.transaction_manager.blocked_transactions_instructions_map)
         self.assertEquals(self.transaction_manager.transactions["T2"].state, TransactionState.ABORTED)
         self.assertEquals(self.transaction_manager.transactions["T1"].state, TransactionState.RUNNING)
