@@ -32,4 +32,5 @@ python main.py <input_file_path> [-v]
 ```
 
 > The -v is an optional argument to set the Verbose flag to True, which will output log messages to stdout
+> Note: Please have each test case in a separate file
 
