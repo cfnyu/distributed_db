@@ -25,6 +25,7 @@ vagrant ssh
 ```
 
 Once the virtual machine is up and you have ssh'd into the new box, run the following commands from inside the VM:
+> NOTE: Please have each test case in a separate file
 
 ```bash
 cd /vagrant
@@ -32,5 +33,5 @@ python main.py <input_file_path> [-v]
 ```
 
 > The -v is an optional argument to set the Verbose flag to True, which will output log messages to stdout
-> Note: Please have each test case in a separate file
+
 
